@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:logging/logging.dart';
 import 'package:provider/provider.dart';
@@ -53,6 +54,11 @@ void main() async {
     notificationsInitializationSettings,
     onDidReceiveNotificationResponse: (notification) {},
   );
+
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
 
   // await notificationsPlugin.show(
   //   0,
