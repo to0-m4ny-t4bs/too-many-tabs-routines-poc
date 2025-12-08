@@ -80,7 +80,7 @@ class _NewRoutineState extends State<NewRoutine> {
               ElevatedButton(
                 onPressed: () async {
                   await widget.viewModel.addRoutine.execute(
-                    textController.text,
+                    textController.text.trim(),
                   );
                   if (widget.viewModel.addRoutine.error) return;
                   if (widget.viewModel.addRoutine.completed) {

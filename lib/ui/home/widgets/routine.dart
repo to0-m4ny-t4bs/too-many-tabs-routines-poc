@@ -106,7 +106,7 @@ class Routine extends StatelessWidget {
                             FittedBox(
                               fit: BoxFit.scaleDown,
                               child: Text(
-                                routine.name,
+                                routine.name.trim(),
                                 style: TextStyle(fontSize: 16),
                                 // overflow: TextOverflow.fade,
                                 softWrap: false,

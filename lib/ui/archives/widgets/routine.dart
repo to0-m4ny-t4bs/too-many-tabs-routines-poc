@@ -46,7 +46,10 @@ class Routine extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Flexible(
-                child: Text(routine.name, style: TextStyle(color: foreground)),
+                child: Text(
+                  routine.name.trim(),
+                  style: TextStyle(color: foreground),
+                ),
               ),
               Text(formatUntilGoal(routine.goal, routine.spent)),
             ],
