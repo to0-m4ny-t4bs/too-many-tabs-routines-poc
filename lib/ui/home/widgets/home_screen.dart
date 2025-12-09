@@ -27,6 +27,24 @@ class HomeScreenState extends State<HomeScreen> {
   RoutineSummary? tappedRoutine;
   PanelController? pc;
 
+  late final AppLifecycleListener _listener;
+
+  @override
+  void initState() {
+    super.initState();
+    _listener = AppLifecycleListener(
+      onResume: () async {
+        await widget.viewModel.load.execute();
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _listener.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;

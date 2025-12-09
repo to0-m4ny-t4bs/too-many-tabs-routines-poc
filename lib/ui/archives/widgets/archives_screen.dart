@@ -5,10 +5,33 @@ import 'package:too_many_tabs/ui/archives/view_models/archives_viewmodel.dart';
 import 'package:too_many_tabs/ui/archives/widgets/routine.dart';
 import 'package:too_many_tabs/ui/core/loader.dart';
 
-class ArchivesScreen extends StatelessWidget {
+class ArchivesScreen extends StatefulWidget {
   const ArchivesScreen({super.key, required this.viewModel});
 
   final ArchivesViewmodel viewModel;
+
+  @override
+  createState() => _ArchivesScreenState();
+}
+
+class _ArchivesScreenState extends State<ArchivesScreen> {
+  late final AppLifecycleListener _listener;
+
+  @override
+  void initState() {
+    _listener = AppLifecycleListener(
+      onResume: () async {
+        await widget.viewModel.load.execute();
+      },
+    );
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    _listener.dispose();
+    super.dispose();
+  }
 
   @override
   build(BuildContext context) {
@@ -50,32 +73,32 @@ class ArchivesScreen extends StatelessWidget {
       ),
       body: SafeArea(
         child: ListenableBuilder(
-          listenable: viewModel.load,
+          listenable: widget.viewModel.load,
           builder: (context, child) {
-            final running = viewModel.load.running,
-                error = viewModel.load.error;
+            final running = widget.viewModel.load.running,
+                error = widget.viewModel.load.error;
             return Loader(
               error: error,
               running: running,
-              onError: viewModel.load.execute,
+              onError: widget.viewModel.load.execute,
               child: child!,
             );
           },
           child: ListenableBuilder(
-            listenable: viewModel,
+            listenable: widget.viewModel,
             builder: (context, _) {
               return CustomScrollView(
                 slivers: [
                   SliverList.builder(
-                    itemCount: viewModel.routines.length,
+                    itemCount: widget.viewModel.routines.length,
                     itemBuilder: (_, index) {
                       return Routine(
                         index: index,
-                        key: ValueKey(viewModel.routines[index].id),
-                        routine: viewModel.routines[index],
+                        key: ValueKey(widget.viewModel.routines[index].id),
+                        routine: widget.viewModel.routines[index],
                         restore: (context) async {
-                          await viewModel.restore.execute(
-                            viewModel.routines[index].id,
+                          await widget.viewModel.restore.execute(
+                            widget.viewModel.routines[index].id,
                           );
                           if (context.mounted) {
                             context.go(Routes.home);
