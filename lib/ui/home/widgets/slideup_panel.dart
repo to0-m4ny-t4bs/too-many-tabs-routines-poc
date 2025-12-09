@@ -30,6 +30,7 @@ class SlideUpPanel extends StatelessWidget {
                 routineID: tappedRoutine!.id,
                 running: tappedRoutine!.running,
                 routineName: tappedRoutine!.name,
+                routineGoal: tappedRoutine!.goal,
                 pc: pc,
                 viewModel: viewModel,
               );
@@ -107,11 +108,13 @@ class _SetGoal extends StatelessWidget {
     required this.pc,
     required this.viewModel,
     required this.routineID,
+    required this.routineGoal,
   });
 
   final String routineName;
-  final bool running;
   final int routineID;
+  final Duration routineGoal;
+  final bool running;
   final PanelController pc;
   final HomeViewmodel viewModel;
 
@@ -176,7 +179,12 @@ class _SetGoal extends StatelessWidget {
               ),
             ],
           ),
-          _GoalSelect(pc: pc, viewModel: viewModel, routineID: routineID),
+          _GoalSelect(
+            pc: pc,
+            viewModel: viewModel,
+            routineID: routineID,
+            routineGoal: routineGoal,
+          ),
         ],
       ),
     );
@@ -188,20 +196,36 @@ class _GoalSelect extends StatefulWidget {
     required this.pc,
     required this.viewModel,
     required this.routineID,
+    required this.routineGoal,
   });
 
   final PanelController pc;
   final int routineID;
+  final Duration routineGoal;
   final HomeViewmodel viewModel;
 
   @override
   createState() => _GoalSelectState();
 }
 
+(int, int) indexGoal(Duration goal) {
+  if (goal.inMinutes > 0) {
+    final hoursIndex = goal.inHours;
+    final minutesIndex = goal.inMinutes.remainder(60) ~/ 30;
+    return (hoursIndex, minutesIndex);
+  }
+  return (0, 1); // 0h30m
+}
+
 class _GoalSelectState extends State<_GoalSelect> {
   int hoursIndex = 0, minutesIndex = 1; // default is 0h30min
   @override
   Widget build(BuildContext context) {
+    final initialIndex = indexGoal(widget.routineGoal);
+    setState(() {
+      hoursIndex = initialIndex.$1;
+      minutesIndex = initialIndex.$2;
+    });
     final colorScheme = Theme.of(context).colorScheme;
     final darkMode = Theme.of(context).brightness == Brightness.dark;
 
@@ -287,7 +311,7 @@ class _GoalSelectState extends State<_GoalSelect> {
               ),
               ElevatedButton(
                 onPressed: minutesIndex == 0 && hoursIndex == 0
-                    ? null
+                    ? null // set goal button is disabled unless duration > 0
                     : () async {
                         await widget.viewModel.updateRoutineGoal.execute(
                           GoalUpdate(
