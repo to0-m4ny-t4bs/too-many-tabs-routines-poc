@@ -37,12 +37,14 @@ void main() async {
       ].join(' '),
     );
     final client = DatabaseClient(db: db);
-    client.log(
-      level: record.level.name,
-      time: record.time,
-      logger: record.loggerName,
-      message: record.message,
-    );
+    if (record.level >= Level.WARNING) {
+      client.log(
+        level: record.level.name,
+        time: record.time,
+        logger: record.loggerName,
+        message: record.message,
+      );
+    }
   });
 
   final notificationsPlugin = FlutterLocalNotificationsPlugin();
