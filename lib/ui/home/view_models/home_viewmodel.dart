@@ -264,34 +264,6 @@ class HomeViewmodel extends ChangeNotifier {
           );
         }
       }
-
-      final goalIn5 = roundedLastStarted.add(
-        _pinnedRoutine!.goal - Duration(minutes: 5) - _pinnedRoutine!.spent,
-      );
-      final scheduleGoalIn5 = goalIn5.isAfter(DateTime.now());
-      _log.info(
-        '_updateNotifications: routineGoalIn5Minutes: $goalIn5 schedule: $scheduleGoalIn5',
-      );
-      if (scheduleGoalIn5) {
-        final t = tz.TZDateTime.from(goalIn5, tz.local);
-        try {
-          await _notificationsPlugin.zonedSchedule(
-            NotificationCode.routineGoalIn5Minutes.code,
-            _pinnedRoutine!.name,
-            "5 more minutes to go",
-            t,
-            notificationDetails,
-            androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-          );
-          _log.info(
-            '_updateNotifications: scheduled routineGoalIn5Minutes at $t',
-          );
-        } catch (e) {
-          _log.warning(
-            '_updateNotifications: schedule routineGoalIn5Minutes: $e',
-          );
-        }
-      }
     } on Exception catch (e) {
       _log.severe('_updateNotifications: $e');
     }
