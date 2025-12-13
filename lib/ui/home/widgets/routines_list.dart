@@ -27,20 +27,21 @@ class RoutinesList extends StatelessWidget {
               itemBuilder: (_, index) => Routine(
                 key: ValueKey(viewModel.routines[index].id),
                 routine: viewModel.routines[index],
-                onTap: () {
+                setGoal: () {
                   onTap(index);
                   pc.open();
                 },
-                onSwitch: (_) async {
+                startStopSwitch: () async {
                   await viewModel.startOrStopRoutine.execute(
                     viewModel.routines[index].id,
                   );
                   return viewModel.startOrStopRoutine.completed;
                 },
-                archive: (_) async {
-                  await viewModel.archiveRoutine.execute(
+                archive: () async {
+                  await viewModel.archiveOrBinRoutine.execute((
                     viewModel.routines[index].id,
-                  );
+                    false, // archive (bin=false)
+                  ));
                 },
               ),
             ),

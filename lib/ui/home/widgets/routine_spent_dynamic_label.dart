@@ -16,34 +16,32 @@ class RoutineSpentDynamicLabel extends StatefulWidget {
   final String? restorationId;
 
   @override
-  RoutineSpentDynamicLabelState createState() =>
-      RoutineSpentDynamicLabelState();
+  createState() => _RoutineSpentDynamicLabelState();
 }
 
-class RoutineSpentDynamicLabelState extends State<RoutineSpentDynamicLabel>
-    with RestorationMixin {
+class _RoutineSpentDynamicLabelState extends State<RoutineSpentDynamicLabel> {
   late Timer _timer;
-
-  final _spentMilliseconds = RestorableInt(0);
-
-  @override
-  String? get restorationId => widget.restorationId;
-
-  @override
-  void restoreState(RestorationBucket? oldBucket, bool initialRestore) {
-    registerForRestoration(_spentMilliseconds, 'spent_milliseconds_value');
-  }
+  late Duration _spent;
+  late AppLifecycleListener _listener;
 
   @override
   initState() {
     super.initState();
+    _spent = routineDurationSpent(widget.lastStarted, widget.spent);
+    _listener = AppLifecycleListener(
+      onResume: () {
+        setState(() {
+          _spent = routineDurationSpent(widget.lastStarted, widget.spent);
+        });
+      },
+    );
     _startTimer();
   }
 
   @override
   dispose() {
+    _listener.dispose();
     _timer.cancel();
-    _spentMilliseconds.dispose();
     super.dispose();
   }
 
@@ -52,18 +50,14 @@ class RoutineSpentDynamicLabelState extends State<RoutineSpentDynamicLabel>
   void _startTimer() {
     _timer = Timer.periodic(_refreshPeriod, (timer) {
       setState(() {
-        _spentMilliseconds.value =
-            widget.spent.inMilliseconds +
-            DateTime.now().difference(widget.lastStarted).inMilliseconds;
+        _spent += _refreshPeriod;
       });
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return RoutineSpentLabel(
-      spent: Duration(milliseconds: _spentMilliseconds.value),
-    );
+    return RoutineSpentLabel(spent: _spent);
   }
 }
 
@@ -82,4 +76,8 @@ class RoutineSpentLabel extends StatelessWidget {
       ),
     );
   }
+}
+
+Duration routineDurationSpent(DateTime lastStarted, Duration spent) {
+  return DateTime.now().difference(lastStarted) + spent;
 }

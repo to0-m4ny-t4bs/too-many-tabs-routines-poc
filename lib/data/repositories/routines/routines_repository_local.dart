@@ -20,17 +20,63 @@ class RoutinesRepositoryLocal implements RoutinesRepository {
   Future<Result<void>> restoreRoutine(int id) async {
     final resultLog = await _databaseClient.updateRoutineLog(
       id,
+      RoutineState.restoredFromBin,
+      DateTime.now(),
+    );
+    switch (resultLog) {
+      case Error<void>():
+        _log.warning('restoreRoutine: updateRoutineLog: ${resultLog.error}');
+        return resultLog;
+      case Ok<void>():
+        _log.fine('restoreRoutine: updated routine log: restoredFromBin');
+    }
+    return _databaseClient.updateRoutineStore(
+      routineId: id,
+      archives: true,
+      bin: false,
+    );
+  }
+
+  @override
+  Future<Result<void>> scheduleRoutine(int id) async {
+    final resultLog = await _databaseClient.updateRoutineLog(
+      id,
       RoutineState.restoredFromArchives,
       DateTime.now(),
     );
     switch (resultLog) {
       case Error<void>():
-        _log.warning('archiveRoutine: updateRoutineLog: ${resultLog.error}');
+        _log.warning('scheduleRoutine: updateRoutineLog: ${resultLog.error}');
         return resultLog;
       case Ok<void>():
-        _log.fine('archiveRoutine: updated routine log: restoredFromArchives');
+        _log.fine('scheduleRoutine: updated routine log: restoredFromArchives');
     }
-    return _databaseClient.updateRoutineStore(routineId: id, archives: false);
+    return _databaseClient.updateRoutineStore(
+      routineId: id,
+      archives: false,
+      bin: false,
+    );
+  }
+
+  @override
+  Future<Result<void>> binRoutine(int id) async {
+    final resultLog = await _databaseClient.updateRoutineLog(
+      id,
+      RoutineState.movedToBin,
+      DateTime.now(),
+    );
+    switch (resultLog) {
+      case Error<void>():
+        _log.warning('binRoutine: updateRoutineLog: ${resultLog.error}');
+        return resultLog;
+      case Ok<void>():
+        _log.fine('binRoutine: updated routine log movedToBin');
+    }
+    return _databaseClient.updateRoutineStore(
+      routineId: id,
+      archives: false,
+      bin: true,
+    );
   }
 
   @override
@@ -47,14 +93,22 @@ class RoutinesRepositoryLocal implements RoutinesRepository {
       case Ok<void>():
         _log.fine('archiveRoutine: updated routine log movedToArchives');
     }
-    return _databaseClient.updateRoutineStore(routineId: id, archives: true);
+    return _databaseClient.updateRoutineStore(
+      routineId: id,
+      archives: true,
+      bin: false,
+    );
   }
 
   @override
   Future<Result<List<RoutineSummary>>> getRoutinesList({
     required bool archived,
+    required bool binned,
   }) async {
-    final resultGet = await _databaseClient.getRoutines(archived: archived);
+    final resultGet = await _databaseClient.getRoutines(
+      archived: archived,
+      binned: binned,
+    );
     switch (resultGet) {
       case Error<List<RoutineSummary>>():
         _log.warning('db client get routines: ${resultGet.error}');
@@ -64,7 +118,7 @@ class RoutinesRepositoryLocal implements RoutinesRepository {
 
     List<RoutineSummary> routines = [];
     for (final routine in resultGet.value) {
-      _log.info('_dailyCheck ${routine.id}');
+      _log.fine('_dailyCheck ${routine.id}');
       final resultCheck = await _dailyCheck(routine.id);
       switch (resultCheck) {
         case Error<RoutineSummary>():
@@ -84,7 +138,7 @@ class RoutinesRepositoryLocal implements RoutinesRepository {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
 
-    _log.info('_dailyCheck $routineID: last log started');
+    _log.fine('_dailyCheck $routineID: last log started');
     final resultStarted = await _databaseClient.lastLog(
       routineID,
       RoutineState.started,
@@ -103,7 +157,7 @@ class RoutinesRepositoryLocal implements RoutinesRepository {
           if (resultStarted.value!.isBefore(today)) {
             // therefore we need to reset routine "spent" attribute
             needSpentReset = true;
-            _log.info('_dailyCheck $routineID: last log stopped');
+            _log.fine('_dailyCheck $routineID: last log stopped');
             final resultStopped = await _databaseClient.lastLog(
               routineID,
               RoutineState.stopped,
@@ -127,7 +181,7 @@ class RoutinesRepositoryLocal implements RoutinesRepository {
           }
         }
         if (needLogStop) {
-          _log.info('_dailyCheck $routineID: logStop');
+          _log.fine('_dailyCheck $routineID: logStop');
           final resultStop = await logStop(routineID, now);
           switch (resultStop) {
             case Error<void>():
@@ -137,7 +191,7 @@ class RoutinesRepositoryLocal implements RoutinesRepository {
           }
         }
         if (needSpentReset) {
-          _log.info('_dailyCheck $routineID: spent reset');
+          _log.fine('_dailyCheck $routineID: spent reset');
           final resultUpdateSpent = await _databaseClient.updateRoutineSpent(
             routineID,
             Duration(),
@@ -151,7 +205,7 @@ class RoutinesRepositoryLocal implements RoutinesRepository {
             case Ok<void>():
           }
 
-          _log.info('_dailyCheck $routineID: running reset');
+          _log.fine('_dailyCheck $routineID: running reset');
           final resultUpdateRunning = await _databaseClient
               .updateRoutineRunning(routineID, false);
           switch (resultUpdateRunning) {

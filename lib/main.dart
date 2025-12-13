@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:logging/logging.dart';
 import 'package:provider/provider.dart';
@@ -36,12 +37,14 @@ void main() async {
       ].join(' '),
     );
     final client = DatabaseClient(db: db);
-    client.log(
-      level: record.level.name,
-      time: record.time,
-      logger: record.loggerName,
-      message: record.message,
-    );
+    if (record.level >= Level.INFO) {
+      client.log(
+        level: record.level.name,
+        time: record.time,
+        logger: record.loggerName,
+        message: record.message,
+      );
+    }
   });
 
   final notificationsPlugin = FlutterLocalNotificationsPlugin();
@@ -53,6 +56,11 @@ void main() async {
     notificationsInitializationSettings,
     onDidReceiveNotificationResponse: (notification) {},
   );
+
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
 
   // await notificationsPlugin.show(
   //   0,
@@ -92,7 +100,7 @@ Future<void> _configureLocalTimeZone() async {
   tz.initializeTimeZones();
   //final timeZoneInfo = await FlutterTimezone.getLocalTimezone('UTC+1');
   tz.setLocalLocation(tz.getLocation('Africa/Casablanca'));
-  log.info('timeZoneInfo: ${tz.local}');
+  log.fine('timeZoneInfo: ${tz.local}');
 }
 
 class MainApp extends StatelessWidget {

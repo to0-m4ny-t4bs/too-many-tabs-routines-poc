@@ -7,10 +7,13 @@ import 'package:sqflite/sqflite.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
 import 'package:too_many_tabs/routing/routes.dart';
 import 'package:too_many_tabs/ui/core/loader.dart';
+import 'package:too_many_tabs/ui/core/ui/floating_action.dart';
+import 'package:too_many_tabs/ui/core/ui/header_action.dart';
+import 'package:too_many_tabs/ui/core/ui/routine_action.dart';
 import 'package:too_many_tabs/ui/home/view_models/home_viewmodel.dart';
 import 'package:too_many_tabs/ui/home/widgets/header_routines_dynamic_goal_label.dart';
-import 'package:too_many_tabs/ui/home/widgets/slide_up.dart';
 import 'package:too_many_tabs/ui/home/widgets/new_routine.dart';
+import 'package:too_many_tabs/ui/home/widgets/slide_up.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, required this.viewModel});
@@ -27,10 +30,32 @@ class HomeScreenState extends State<HomeScreen> {
   RoutineSummary? tappedRoutine;
   PanelController? pc;
 
+  late final AppLifecycleListener _listener;
+
+  @override
+  void initState() {
+    super.initState();
+    _listener = AppLifecycleListener(
+      onResume: () async {
+        await widget.viewModel.load.execute();
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _listener.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final darkMode = Theme.of(context).brightness == Brightness.dark;
+
+    const verticalOffset = 110.0;
+    const slideUpPanelMinHeight = 100.0;
+    const slideUpPanelMaxHeight = 340.0;
 
     return Scaffold(
       appBar: AppBar(
@@ -90,16 +115,7 @@ class HomeScreenState extends State<HomeScreen> {
           ),
         ),
         actions: [
-          IconButton(
-            onPressed: () {
-              context.go(Routes.archives);
-            },
-            icon: Icon(Icons.archive),
-            color: darkMode
-                ? colorScheme.onPrimaryContainer
-                : colorScheme.primary,
-          ),
-          IconButton(
+          HeaderAction(
             onPressed: () async {
               final path = await getDatabasesPath();
               await SharePlus.instance.share(
@@ -109,10 +125,7 @@ class HomeScreenState extends State<HomeScreen> {
                 ),
               );
             },
-            icon: Icon(Icons.download),
-            color: darkMode
-                ? colorScheme.onPrimaryContainer
-                : colorScheme.primary,
+            icon: Icons.download,
           ),
         ],
       ),
@@ -133,6 +146,8 @@ class HomeScreenState extends State<HomeScreen> {
                 );
               },
               child: SlideUp(
+                minHeight: slideUpPanelMinHeight,
+                maxHeight: slideUpPanelMaxHeight,
                 pc: (pcfn) {
                   pc = pcfn();
                 },
@@ -178,29 +193,41 @@ class HomeScreenState extends State<HomeScreen> {
                     ),
                   )
                 : Container(),
+            isPanelOpen || showNewRoutinePopup
+                ? Container()
+                : Align(
+                    alignment: Alignment.bottomRight,
+                    child: FloatingAction(
+                      icon: Icons.add,
+                      onPressed: () => setState(() {
+                        showNewRoutinePopup = true;
+                      }),
+                      colorComposition: colorCompositionFromAction(
+                        context,
+                        ApplicationAction.addRoutine,
+                      ),
+                      verticalOffset: verticalOffset,
+                    ),
+                  ),
+            isPanelOpen || showNewRoutinePopup
+                ? Container()
+                : Align(
+                    alignment: Alignment.bottomLeft,
+                    child: FloatingAction(
+                      icon: Icons.menu,
+                      onPressed: () {
+                        context.go(Routes.archives);
+                      },
+                      colorComposition: colorCompositionFromAction(
+                        context,
+                        ApplicationAction.backlogRoutine,
+                      ),
+                      verticalOffset: verticalOffset,
+                    ),
+                  ),
           ],
         ),
       ),
-      floatingActionButton: isPanelOpen || showNewRoutinePopup
-          ? null
-          : Padding(
-              padding: EdgeInsets.only(bottom: 70),
-              child: FloatingActionButton(
-                backgroundColor: darkMode
-                    ? colorScheme.primaryContainer
-                    : colorScheme.primary,
-                foregroundColor: darkMode
-                    ? colorScheme.onPrimaryContainer
-                    : colorScheme.onPrimary,
-                shape: CircleBorder(),
-                child: Icon(Icons.add),
-                onPressed: () {
-                  setState(() {
-                    showNewRoutinePopup = true;
-                  });
-                },
-              ),
-            ),
     );
   }
 }

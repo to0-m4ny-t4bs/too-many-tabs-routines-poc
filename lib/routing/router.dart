@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:too_many_tabs/routing/routes.dart';
 import 'package:too_many_tabs/ui/archives/view_models/archives_viewmodel.dart';
 import 'package:too_many_tabs/ui/archives/widgets/archives_screen.dart';
+import 'package:too_many_tabs/ui/bin/view_models/bin_viewmodel.dart';
+import 'package:too_many_tabs/ui/bin/widgets/bin_screen.dart';
 import 'package:too_many_tabs/ui/home/view_models/home_viewmodel.dart';
 import 'package:too_many_tabs/ui/home/widgets/home_screen.dart';
 
@@ -26,6 +28,13 @@ GoRouter router() => GoRouter(
       builder: (context, state) {
         final viewModel = ArchivesViewmodel(routinesRepository: context.read());
         return ArchivesScreen(viewModel: viewModel);
+      },
+    ),
+    GoRoute(
+      path: Routes.bin,
+      builder: (context, state) {
+        final viewModel = BinViewmodel(routinesRepository: context.read());
+        return BinScreen(viewModel: viewModel);
       },
     ),
   ],

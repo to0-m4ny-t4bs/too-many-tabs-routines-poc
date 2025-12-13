@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
+import 'package:too_many_tabs/ui/core/ui/routine_action.dart';
 import 'package:too_many_tabs/ui/home/widgets/routine_goal_label.dart';
 import 'package:too_many_tabs/ui/home/widgets/routine_spent_dynamic_label.dart';
 
@@ -8,15 +9,13 @@ class Routine extends StatelessWidget {
   const Routine({
     super.key,
     required this.routine,
-    required this.onTap,
-    required this.onSwitch,
+    required this.setGoal,
+    required this.startStopSwitch,
     required this.archive,
   });
 
   final RoutineSummary routine;
-  final GestureTapCallback onTap;
-  final Function(BuildContext) onSwitch;
-  final Function(BuildContext) archive;
+  final Function() setGoal, startStopSwitch, archive;
 
   @override
   Widget build(BuildContext context) {
@@ -25,49 +24,24 @@ class Routine extends StatelessWidget {
 
     return Slidable(
       key: ValueKey(routine.id),
-      endActionPane: ActionPane(
-        motion: BehindMotion(),
-        children: [
-          SlidableAction(
-            backgroundColor: routine.running
-                ? (darkMode // stop
-                      ? colorScheme.surfaceContainerLow
-                      : colorScheme.tertiary)
-                : (darkMode // start
-                      ? colorScheme.surfaceContainerLow
-                      : colorScheme.primary),
-            foregroundColor: routine.running
-                ? (darkMode // stop
-                      ? colorScheme.onSurface
-                      : colorScheme.onTertiary)
-                : (darkMode // start
-                      ? colorScheme.primary
-                      : colorScheme.onPrimary),
-            onPressed: onSwitch,
-            icon: routine.running ? Icons.stop : Icons.timer,
-            label: routine.running ? 'Stop' : 'Start',
-          ),
-        ],
-      ),
       startActionPane: ActionPane(
         motion: ScrollMotion(),
+        dismissible: DismissiblePane(onDismissed: archive, closeOnCancel: true),
         children: [
-          SlidableAction(
-            backgroundColor: darkMode
-                ? colorScheme.surfaceContainerLow
-                : colorScheme.inverseSurface,
-            foregroundColor: darkMode
-                ? colorScheme.onSurface
-                : colorScheme.onInverseSurface,
-            onPressed: archive,
+          RoutineAction(
             icon: Icons.archive,
-            label: 'Archive',
+            state: ApplicationAction.backlogRoutine,
+            label: 'Backlog',
+            onPressed: (_) {
+              archive();
+            },
           ),
         ],
       ),
       child: InkWell(
         splashColor: colorScheme.primaryContainer,
-        onTap: onTap,
+        onTap: startStopSwitch,
+        onLongPress: setGoal,
         child: Padding(
           padding: EdgeInsets.symmetric(vertical: 0),
           child: Row(
@@ -106,7 +80,7 @@ class Routine extends StatelessWidget {
                             FittedBox(
                               fit: BoxFit.scaleDown,
                               child: Text(
-                                routine.name,
+                                routine.name.trim(),
                                 style: TextStyle(fontSize: 16),
                                 // overflow: TextOverflow.fade,
                                 softWrap: false,

@@ -21,7 +21,7 @@ class HomeViewmodel extends ChangeNotifier {
     startOrStopRoutine = Command1(_startOrStopRoutine);
     updateRoutineGoal = Command1(_updateRoutineGoal);
     addRoutine = Command1(_createRoutine);
-    archiveRoutine = Command1(_archiveRoutive);
+    archiveOrBinRoutine = Command1(_archiveOrBinRoutine);
   }
 
   final RoutinesRepository _routinesRepository;
@@ -35,7 +35,8 @@ class HomeViewmodel extends ChangeNotifier {
   late Command1<void, int> startOrStopRoutine;
   late Command1<void, GoalUpdate> updateRoutineGoal;
   late Command1<void, String> addRoutine;
-  late Command1<void, int> archiveRoutine;
+  late Command1<void, (int, bool)> archiveOrBinRoutine;
+  late Command1<void, int> trashRoutine;
 
   List<RoutineSummary> get routines => _routines;
   RoutineSummary? get pinnedRoutine => _pinnedRoutine;
@@ -43,7 +44,10 @@ class HomeViewmodel extends ChangeNotifier {
 
   Future<Result> _load() async {
     try {
-      final result = await _routinesRepository.getRoutinesList(archived: false);
+      final result = await _routinesRepository.getRoutinesList(
+        archived: false,
+        binned: false,
+      );
       switch (result) {
         case Error<List<RoutineSummary>>():
           _log.warning('Failed to load routines', result.error);
@@ -70,13 +74,15 @@ class HomeViewmodel extends ChangeNotifier {
     }
   }
 
-  Future<Result<void>> _archiveRoutive(int id) async {
+  Future<Result<void>> _archiveOrBinRoutine((int, bool) archiveOrBin) async {
+    final id = archiveOrBin.$1;
+    final bin = archiveOrBin.$2;
     try {
       final resultRunning = await _routinesRepository.getRunningRoutine();
       switch (resultRunning) {
         case Error<RoutineSummary?>():
           _log.warning(
-            '_archiveRoutive: failed to get running routine: ${resultRunning.error}',
+            '_archiveOrBinRoutine: failed to get running routine: ${resultRunning.error}',
           );
         case Ok<RoutineSummary?>():
           if (resultRunning.value != null && resultRunning.value!.id == id) {
@@ -87,32 +93,37 @@ class HomeViewmodel extends ChangeNotifier {
             switch (resultStop) {
               case Error<void>():
                 _log.warning(
-                  '_archiveRoutive: failed to stop $id: ${resultStop.error}',
+                  '_archiveOrBinRoutine: failed to stop $id: ${resultStop.error}',
                 );
                 return resultStop;
               case Ok<void>():
-                _log.fine('_archiveRoutive: stopped $id');
+                _log.fine('_archiveOrBinRoutine: stopped $id');
                 _pinnedRoutine = null;
             }
           }
       }
 
-      final resultArchive = await _routinesRepository.archiveRoutine(id);
-      switch (resultArchive) {
+      final Result<void> resultAction;
+      if (bin) {
+        resultAction = await _routinesRepository.binRoutine(id);
+      } else {
+        resultAction = await _routinesRepository.archiveRoutine(id);
+      }
+      switch (resultAction) {
         case Error<void>():
           _log.warning(
-            '_archiveRoutive: failed to archive $id: ${resultArchive.error}',
+            '_archiveOrBinRoutine: action(bin=$bin) $id: ${resultAction.error}',
           );
-          return resultArchive;
+          return resultAction;
         case Ok<void>():
-          _log.fine('_archiveRoutive: archived $id');
+          _log.fine('_archiveOrBinRoutine: action(bin=$bin) $id');
       }
 
       await _load();
 
       return Result.ok(null);
     } on Exception catch (e) {
-      _log.warning('_archiveRoutive: $e');
+      _log.warning('_archiveOrBinRoutine: $e');
       return Result.error(e);
     } finally {
       notifyListeners();
@@ -144,7 +155,7 @@ class HomeViewmodel extends ChangeNotifier {
 
   Future<void> _updateNotifications() async {
     try {
-      _log.info('_updateNotifications: tz.local: ${tz.local}');
+      _log.fine('_updateNotifications: tz.local: ${tz.local}');
       const notificationDetails = NotificationDetails(
         iOS: DarwinNotificationDetails(
           presentAlert: true,
@@ -160,16 +171,23 @@ class HomeViewmodel extends ChangeNotifier {
       ]) {
         await _notificationsPlugin.cancel(code.code);
       }
-      _log.info(
+      _log.fine(
         '_updateNotifications: cancelled routineHalfGoal, routineCompletedGoal',
       );
-      _log.info('_updateNotifications: pinnedRoutine: $_pinnedRoutine');
+      _log.fine('_updateNotifications: pinnedRoutine: $_pinnedRoutine');
       if (_pinnedRoutine == null) return;
-      final halfWay = _pinnedRoutine!.lastStarted!.add(
-        Duration(minutes: _pinnedRoutine!.goal.inMinutes ~/ 2),
+      final untilHalfWay = Duration(
+        minutes: (_pinnedRoutine!.goal - _pinnedRoutine!.spent).inMinutes ~/ 2,
       );
-      final scheduleHalfWay = halfWay.isAfter(DateTime.now());
-      _log.info(
+      final roundedLastStarted = _pinnedRoutine!.lastStarted!.add(
+        // e.g. if started at 12:00:40 rounded would be 12:01:00
+        // and therefore notification is delayed by 20 seconds
+        Duration(seconds: 60 - _pinnedRoutine!.lastStarted!.second),
+      );
+      final halfWay = roundedLastStarted.add(untilHalfWay);
+      final scheduleHalfWay =
+          untilHalfWay.inMinutes >= 20 && halfWay.isAfter(DateTime.now());
+      _log.fine(
         '_updateNotifications: routineHalfGoal: $halfWay schedule: $scheduleHalfWay',
       );
       if (scheduleHalfWay) {
@@ -183,7 +201,7 @@ class HomeViewmodel extends ChangeNotifier {
             notificationDetails,
             androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
           );
-          _log.info(
+          _log.fine(
             '_updateNotifications: scheduled routineHalfGoal at $halfWayTime',
           );
         } catch (e) {
@@ -191,9 +209,11 @@ class HomeViewmodel extends ChangeNotifier {
         }
       }
 
-      final done = _pinnedRoutine!.lastStarted!.add(_pinnedRoutine!.goal);
+      final done = roundedLastStarted.add(
+        _pinnedRoutine!.goal - _pinnedRoutine!.spent,
+      );
       final scheduleDone = done.isAfter(DateTime.now());
-      _log.info(
+      _log.fine(
         '_updateNotifications: routineCompletedGoal: $done schedule: $scheduleDone',
       );
       if (scheduleDone) {
@@ -207,7 +227,7 @@ class HomeViewmodel extends ChangeNotifier {
             notificationDetails,
             androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
           );
-          _log.info(
+          _log.fine(
             '_updateNotifications: scheduled routineHalfGoal at $doneTime',
           );
         } catch (e) {
@@ -217,11 +237,11 @@ class HomeViewmodel extends ChangeNotifier {
         }
       }
 
-      final goalIn10 = _pinnedRoutine!.lastStarted!.add(
-        _pinnedRoutine!.goal - Duration(minutes: 10),
+      final goalIn10 = roundedLastStarted.add(
+        _pinnedRoutine!.goal - Duration(minutes: 10) - _pinnedRoutine!.spent,
       );
       final scheduleGoalIn10 = goalIn10.isAfter(DateTime.now());
-      _log.info(
+      _log.fine(
         '_updateNotifications: routineGoalIn10Minutes: $goalIn10 schedule: $scheduleGoalIn10',
       );
       if (scheduleGoalIn10) {
@@ -235,40 +255,12 @@ class HomeViewmodel extends ChangeNotifier {
             notificationDetails,
             androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
           );
-          _log.info(
+          _log.fine(
             '_updateNotifications: scheduled routineGoalIn10Minutes at $t',
           );
         } catch (e) {
           _log.warning(
             '_updateNotifications: schedule routineGoalIn10Minutes: $e',
-          );
-        }
-      }
-
-      final goalIn5 = _pinnedRoutine!.lastStarted!.add(
-        _pinnedRoutine!.goal - Duration(minutes: 5),
-      );
-      final scheduleGoalIn5 = goalIn5.isAfter(DateTime.now());
-      _log.info(
-        '_updateNotifications: routineGoalIn5Minutes: $goalIn5 schedule: $scheduleGoalIn5',
-      );
-      if (scheduleGoalIn5) {
-        final t = tz.TZDateTime.from(goalIn5, tz.local);
-        try {
-          await _notificationsPlugin.zonedSchedule(
-            NotificationCode.routineGoalIn5Minutes.code,
-            _pinnedRoutine!.name,
-            "5 more minutes to go",
-            t,
-            notificationDetails,
-            androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-          );
-          _log.info(
-            '_updateNotifications: scheduled routineGoalIn5Minutes at $t',
-          );
-        } catch (e) {
-          _log.warning(
-            '_updateNotifications: schedule routineGoalIn5Minutes: $e',
           );
         }
       }
@@ -306,8 +298,19 @@ class HomeViewmodel extends ChangeNotifier {
           return Result.error(resultGetRoutine.error);
         case Ok<RoutineSummary>():
           _log.fine(
-            '_updateRoutineGoal: refreshed routine id=${resultGetRoutine.value.id} label=${resultGetRoutine.value.name}',
+            '_updateRoutineGoal: resultGetRoutine: ${resultGetRoutine.value}',
           );
+          final resultRunning = await _routinesRepository.getRunningRoutine();
+          switch (resultRunning) {
+            case Error<RoutineSummary?>():
+              _log.warning(
+                '_updateRoutineGoal: getRunningRoutine: ${resultRunning.error}',
+              );
+              return Result.error(resultRunning.error);
+            case Ok<RoutineSummary?>():
+              _pinnedRoutine = resultRunning.value;
+              _log.fine('_updateRoutineGoal: _pinnedRoutine: $_pinnedRoutine');
+          }
           _routines = _routines.map((routine) {
             if (routine.id == request.routineID) {
               return resultGetRoutine.value;
@@ -349,9 +352,7 @@ class HomeViewmodel extends ChangeNotifier {
         case Ok<RoutineSummary>():
       }
 
-      _log.info(
-        '_startOrStopRoutine: routine $id "${resultRoutine.value.name}" lastStarted=${resultRoutine.value.lastStarted} running=${resultRoutine.value.running}',
-      );
+      _log.fine('_startOrStopRoutine: routine ${resultRoutine.value}');
 
       final Result<void> resultSwitch;
       final String action;
@@ -373,6 +374,7 @@ class HomeViewmodel extends ChangeNotifier {
 
       final resultRefresh = await _routinesRepository.getRoutinesList(
         archived: false,
+        binned: false,
       );
       switch (resultRefresh) {
         case Error<List<RoutineSummary>>():
@@ -382,9 +384,7 @@ class HomeViewmodel extends ChangeNotifier {
           _routines = resultRefresh.value;
           _log.fine('Loaded routines');
           for (final routine in resultRefresh.value) {
-            _log.info(
-              'Routine [${routine.name} id=${routine.id}] [${routine.running ? 'running' : 'not running'}]',
-            );
+            _log.fine('_startOrStopRoutine: resultRefresh: $routine');
           }
       }
 

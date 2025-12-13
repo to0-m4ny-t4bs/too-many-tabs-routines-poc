@@ -1,22 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:too_many_tabs/routing/routes.dart';
-import 'package:too_many_tabs/ui/archives/view_models/archives_viewmodel.dart';
-import 'package:too_many_tabs/ui/archives/widgets/routine.dart';
+import 'package:too_many_tabs/ui/bin/widgets/routine.dart';
+import 'package:too_many_tabs/ui/bin/view_models/bin_viewmodel.dart';
 import 'package:too_many_tabs/ui/core/loader.dart';
 import 'package:too_many_tabs/ui/core/ui/floating_action.dart';
 import 'package:too_many_tabs/ui/core/ui/routine_action.dart';
 
-class ArchivesScreen extends StatefulWidget {
-  const ArchivesScreen({super.key, required this.viewModel});
+class BinScreen extends StatefulWidget {
+  const BinScreen({super.key, required this.viewModel});
 
-  final ArchivesViewmodel viewModel;
+  final BinViewmodel viewModel;
 
   @override
   createState() => _ArchivesScreenState();
 }
 
-class _ArchivesScreenState extends State<ArchivesScreen> {
+class _ArchivesScreenState extends State<BinScreen> {
   late final AppLifecycleListener _listener;
 
   @override
@@ -49,7 +49,7 @@ class _ArchivesScreenState extends State<ArchivesScreen> {
           child: Row(
             children: [
               Text(
-                'Backlog',
+                'Archives',
                 style: TextStyle(
                   fontWeight: FontWeight.w300,
                   fontSize: 18,
@@ -94,14 +94,6 @@ class _ArchivesScreenState extends State<ArchivesScreen> {
                               await widget.viewModel.restore.execute(
                                 widget.viewModel.routines[index].id,
                               );
-                              if (context.mounted) {
-                                context.go(Routes.home);
-                              }
-                            },
-                            trash: () async {
-                              await widget.viewModel.bin.execute(
-                                widget.viewModel.routines[index].id,
-                              );
                               await widget.viewModel.load.execute();
                             },
                           );
@@ -113,20 +105,18 @@ class _ArchivesScreenState extends State<ArchivesScreen> {
               ),
             ),
             Align(
-              alignment: Alignment.bottomLeft,
+              alignment: Alignment.bottomRight,
               child: FloatingAction(
-                onPressed: () {
-                  context.go(Routes.bin);
-                },
-                icon: Icons.archive,
+                onPressed: () => context.go(Routes.archives),
+                icon: Icons.menu,
                 colorComposition: colorCompositionFromAction(
                   context,
-                  ApplicationAction.archiveRoutine,
+                  ApplicationAction.backlogRoutine,
                 ),
               ),
             ),
             Align(
-              alignment: Alignment.bottomRight,
+              alignment: Alignment.bottomLeft,
               child: FloatingAction(
                 onPressed: () => context.go(Routes.home),
                 icon: Icons.home,

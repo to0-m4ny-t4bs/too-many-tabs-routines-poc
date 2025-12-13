@@ -37,7 +37,7 @@ Future<Result<Database>> prepareDatabase() async {
 
     await File(path).writeAsBytes(bytes, flush: true);
   } else {
-    log.info('Opening existing database');
+    log.fine('Opening existing database');
   }
 
   return Result.ok(await openDatabase(path));

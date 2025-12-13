@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
 import 'package:too_many_tabs/ui/core/themes/dimens.dart';
 import 'package:too_many_tabs/ui/home/view_models/goal_update.dart';
 import 'package:too_many_tabs/ui/home/view_models/home_viewmodel.dart';
+import 'package:too_many_tabs/utils/format_duration.dart';
 
 class SlideUpPanel extends StatelessWidget {
   const SlideUpPanel({
@@ -30,6 +33,7 @@ class SlideUpPanel extends StatelessWidget {
                 routineID: tappedRoutine!.id,
                 running: tappedRoutine!.running,
                 routineName: tappedRoutine!.name,
+                routineGoal: tappedRoutine!.goal,
                 pc: pc,
                 viewModel: viewModel,
               );
@@ -39,9 +43,10 @@ class SlideUpPanel extends StatelessWidget {
 }
 
 class Collapsed extends StatelessWidget {
-  const Collapsed({super.key, required this.runningRoutine});
+  const Collapsed({super.key, this.runningRoutine, this.eta});
 
   final RoutineSummary? runningRoutine;
+  final DateTime? eta;
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +60,7 @@ class Collapsed extends StatelessWidget {
           runningRoutine ==
                   null // running routine
               ? Text(
-                  'Swipe any item to start the routine timer.',
+                  'Tap to pick a routine',
                   style: TextStyle(
                     color: darkMode
                         ? colorScheme.onPrimaryContainer
@@ -66,14 +71,6 @@ class Collapsed extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   spacing: 6,
                   children: [
-                    Text(
-                      'Good luck with',
-                      style: TextStyle(
-                        fontWeight: darkMode
-                            ? FontWeight.w500
-                            : FontWeight.w300,
-                      ),
-                    ),
                     _RoutineLabel(
                       running: true,
                       name: runningRoutine!.name,
@@ -82,12 +79,16 @@ class Collapsed extends StatelessWidget {
                           : colorScheme.primary,
                       fontWeight: darkMode ? FontWeight.w600 : FontWeight.w300,
                     ),
-                    const Text('!'),
+                    _RoutineETA(
+                      eta: eta!,
+                      goal: runningRoutine!.goal,
+                      restorationId: 'routine-eta-${runningRoutine!.id}',
+                    ),
                   ],
                 ),
           Expanded(
             child: Text(
-              'Tap any item to update goals.',
+              'Long press to set goals',
               style: TextStyle(
                 color: darkMode ? colorScheme.secondary : colorScheme.onSurface,
                 fontWeight: darkMode ? FontWeight.w500 : FontWeight.w200,
@@ -107,11 +108,13 @@ class _SetGoal extends StatelessWidget {
     required this.pc,
     required this.viewModel,
     required this.routineID,
+    required this.routineGoal,
   });
 
   final String routineName;
-  final bool running;
   final int routineID;
+  final Duration routineGoal;
+  final bool running;
   final PanelController pc;
   final HomeViewmodel viewModel;
 
@@ -156,11 +159,12 @@ class _SetGoal extends StatelessWidget {
                   color: darkMode
                       ? colorScheme.onPrimary
                       : colorScheme.onSurface,
+                  fontWeight: FontWeight.w300,
                 ),
               ),
               _RoutineLabel(
                 running: running,
-                name: routineName,
+                name: routineName.trim(),
                 color: darkMode ? colorScheme.onPrimary : colorScheme.primary,
                 fontWeight: darkMode
                     ? (running ? FontWeight.w300 : FontWeight.w600)
@@ -172,11 +176,17 @@ class _SetGoal extends StatelessWidget {
                   color: darkMode
                       ? colorScheme.onPrimary
                       : colorScheme.onSurface,
+                  fontWeight: FontWeight.w300,
                 ),
               ),
             ],
           ),
-          _GoalSelect(pc: pc, viewModel: viewModel, routineID: routineID),
+          _GoalSelect(
+            pc: pc,
+            viewModel: viewModel,
+            routineID: routineID,
+            routineGoal: routineGoal,
+          ),
         ],
       ),
     );
@@ -188,18 +198,39 @@ class _GoalSelect extends StatefulWidget {
     required this.pc,
     required this.viewModel,
     required this.routineID,
+    required this.routineGoal,
   });
 
   final PanelController pc;
   final int routineID;
+  final Duration routineGoal;
   final HomeViewmodel viewModel;
 
   @override
   createState() => _GoalSelectState();
 }
 
+(int, int) indexGoal(Duration goal) {
+  if (goal.inMinutes > 0) {
+    final hoursIndex = goal.inHours;
+    final minutesIndex = goal.inMinutes.remainder(60) ~/ 30;
+    return (hoursIndex, minutesIndex);
+  }
+  return (0, 1); // 0h30m
+}
+
 class _GoalSelectState extends State<_GoalSelect> {
   int hoursIndex = 0, minutesIndex = 1; // default is 0h30min
+
+  @override
+  @override
+  void initState() {
+    final initialIndex = indexGoal(widget.routineGoal);
+    hoursIndex = initialIndex.$1;
+    minutesIndex = initialIndex.$2;
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -216,7 +247,7 @@ class _GoalSelectState extends State<_GoalSelect> {
       fontWeight: FontWeight.w500,
       fontSize: fontSize / 4,
     );
-    final itemExtent = fontSize * 7 / 6;
+    final itemExtent = fontSize * 7 / 6 + 2;
     return SizedBox(
       height: 240,
       child: Column(
@@ -287,7 +318,7 @@ class _GoalSelectState extends State<_GoalSelect> {
               ),
               ElevatedButton(
                 onPressed: minutesIndex == 0 && hoursIndex == 0
-                    ? null
+                    ? null // set goal button is disabled unless duration > 0
                     : () async {
                         await widget.viewModel.updateRoutineGoal.execute(
                           GoalUpdate(
@@ -398,10 +429,95 @@ class _RoutineLabel extends StatelessWidget {
         padding: EdgeInsets.symmetric(),
         // padding: EdgeInsets.symmetric(vertical: 4, horizontal: 10),
         child: Text(
-          name,
+          name.trim(),
           style: TextStyle(fontWeight: fontWeight, color: color),
         ),
       ),
+    );
+  }
+}
+
+class _RoutineETA extends StatefulWidget {
+  const _RoutineETA({
+    required this.eta,
+    required this.goal,
+    required this.restorationId,
+  });
+
+  final String restorationId;
+  final DateTime eta;
+  final Duration goal;
+
+  @override
+  createState() => _RoutineETAState();
+}
+
+class _RoutineETAState extends State<_RoutineETA> with RestorationMixin {
+  late Timer _timer;
+
+  final _done = RestorableBool(false);
+
+  @override
+  get restorationId => widget.restorationId;
+
+  @override
+  void restoreState(RestorationBucket? oldBucket, bool initialRestore) {
+    registerForRestoration(_done, 'left_minutes_value');
+  }
+
+  @override
+  initState() {
+    super.initState();
+    _startTimer();
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
+
+  static const _refreshPeriod = Duration(seconds: 1);
+
+  void _startTimer() {
+    _timer = Timer.periodic(_refreshPeriod, (timer) {
+      if (DateTime.now().isAfter(widget.eta)) {
+        setState(() {
+          _done.value = true;
+        });
+        timer.cancel();
+      }
+    });
+  }
+
+  TextStyle _style(double size) {
+    return TextStyle(fontWeight: FontWeight.w300, fontSize: size);
+  }
+
+  @override
+  build(BuildContext context) {
+    if (!_done.value) {
+      var hours = widget.eta.hour.remainder(12).toString();
+      if (hours == "0") {
+        hours = "12";
+      }
+      final minutes = widget.eta.minute.toString().padLeft(2, '0');
+      final tod = widget.eta.hour < 12 ? "am" : "pm";
+      return Row(
+        children: [
+          Text('(ETA: $hours:$minutes', style: _style(12)),
+          Text(tod, style: _style(10)),
+          Text(')', style: _style(12)),
+        ],
+      );
+    }
+    // this block is the only reason we need to  track of _leftMinutes, though,
+    // we might be able to stick with a stateless widget and leave the
+    // computation (that should happen only once) to the listenable builder
+    // building the Collapsed widget.
+    return Text(
+      '(reached ${formatUntilGoal(widget.goal, Duration())})',
+      style: _style(12),
     );
   }
 }

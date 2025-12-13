@@ -40,7 +40,7 @@ class _HeaderRoutinesDynamicGoalLabelState
     super.initState();
   }
 
-  static const _refreshPeriod = Duration(milliseconds: 100);
+  static const _refreshPeriod = Duration(milliseconds: 50);
   void _startTimer() {
     _timer = Timer.periodic(_refreshPeriod, (_) {
       var goal = Duration();

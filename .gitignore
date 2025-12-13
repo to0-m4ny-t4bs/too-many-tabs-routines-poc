@@ -1,4 +1,5 @@
 # Miscellaneous
+.commit-stash
 *.class
 *.log
 *.pyc

@@ -10,6 +10,7 @@ class ArchivesViewmodel extends ChangeNotifier {
     : _routinesRepository = routinesRepository {
     load = Command0(_load)..execute();
     restore = Command1(_restore);
+    bin = Command1(_bin);
   }
 
   final RoutinesRepository _routinesRepository;
@@ -18,6 +19,7 @@ class ArchivesViewmodel extends ChangeNotifier {
 
   late Command0 load;
   late Command1<void, int> restore;
+  late Command1<void, int> bin;
 
   List<RoutineSummary> get routines => _routines;
 
@@ -25,6 +27,7 @@ class ArchivesViewmodel extends ChangeNotifier {
     try {
       final resultGet = await _routinesRepository.getRoutinesList(
         archived: true,
+        binned: false,
       );
       switch (resultGet) {
         case Error<List<RoutineSummary>>():
@@ -45,7 +48,7 @@ class ArchivesViewmodel extends ChangeNotifier {
 
   Future<Result<void>> _restore(int id) async {
     try {
-      final result = await _routinesRepository.restoreRoutine(id);
+      final result = await _routinesRepository.scheduleRoutine(id);
       switch (result) {
         case Error<void>():
           _log.warning('_restore: restoreRoutine($id): ${result.error}');
@@ -56,6 +59,22 @@ class ArchivesViewmodel extends ChangeNotifier {
 
       await _load();
 
+      return Result.ok(null);
+    } finally {
+      notifyListeners();
+    }
+  }
+
+  Future<Result<void>> _bin(int id) async {
+    try {
+      final resultBin = await _routinesRepository.binRoutine(id);
+      switch (resultBin) {
+        case Error<void>():
+          _log.warning('_bin: binRoutine $id: ${resultBin.error}');
+          return resultBin;
+        case Ok<void>():
+          _log.fine('_bin: binned routine $id');
+      }
       return Result.ok(null);
     } finally {
       notifyListeners();

@@ -12,11 +12,12 @@ class DatabaseClient {
   Future<Result<void>> updateRoutineStore({
     required int routineId,
     required bool archives,
+    required bool bin,
   }) async {
     try {
       await _database.update(
         'routines',
-        {'archived': archives ? 1 : 0},
+        {'archived': archives ? 1 : 0, 'binned': bin ? 1 : 0},
         where: 'id = ?',
         whereArgs: [routineId],
       );
@@ -65,6 +66,7 @@ class DatabaseClient {
 
   Future<Result<List<RoutineSummary>>> getRoutines({
     required bool archived,
+    required bool binned,
   }) async {
     final List<Map<String, Object?>> rows;
 
@@ -72,8 +74,8 @@ class DatabaseClient {
       rows = await _database.query(
         'routines',
         orderBy: 'name',
-        where: 'archived = ?',
-        whereArgs: [archived ? 1 : 0],
+        where: 'archived = ? AND binned = ?',
+        whereArgs: [archived ? 1 : 0, binned ? 1 : 0],
       );
     } on Exception catch (e) {
       _log.warning('query routines', e.toString());
@@ -126,7 +128,7 @@ class DatabaseClient {
       running: running == 0 ? false : true,
       lastStarted: lastStarted,
     );
-    _log.info('_extractRoutineSummary: $summary');
+    _log.fine('_extractRoutineSummary: $summary');
 
     return Result.ok(summary);
   }
@@ -291,7 +293,9 @@ enum RoutineState {
   goalUpdated(2),
   created(3),
   movedToArchives(4),
-  restoredFromArchives(5);
+  restoredFromArchives(5),
+  restoredFromBin(6),
+  movedToBin(7);
 
   const RoutineState(this.code);
 
