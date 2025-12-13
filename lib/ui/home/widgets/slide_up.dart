@@ -15,6 +15,8 @@ class SlideUp extends StatefulWidget {
     required this.tappedRoutine,
     required this.notifyPanelState,
     required this.pc,
+    required this.minHeight,
+    required this.maxHeight,
   });
 
   final HomeViewmodel viewModel;
@@ -23,6 +25,7 @@ class SlideUp extends StatefulWidget {
   final RoutineSummary? tappedRoutine;
   final void Function(bool) notifyPanelState;
   final Function(PanelController Function()) pc;
+  final double minHeight, maxHeight;
 
   @override
   createState() => _SlideUpState();
@@ -78,7 +81,8 @@ class _SlideUpState extends State<SlideUp> {
         });
       },
       isDraggable: !(isPanelOpened && widget.tappedRoutine != null),
-      maxHeight: 340,
+      maxHeight: widget.maxHeight,
+      minHeight: widget.minHeight,
       collapsed: ListenableBuilder(
         listenable: widget.viewModel,
         builder: (context, _) {

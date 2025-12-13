@@ -4,7 +4,8 @@ import 'package:too_many_tabs/routing/routes.dart';
 import 'package:too_many_tabs/ui/bin/widgets/routine.dart';
 import 'package:too_many_tabs/ui/bin/view_models/bin_viewmodel.dart';
 import 'package:too_many_tabs/ui/core/loader.dart';
-import 'package:too_many_tabs/ui/core/ui/header_action.dart';
+import 'package:too_many_tabs/ui/core/ui/floating_action.dart';
+import 'package:too_many_tabs/ui/core/ui/routine_action.dart';
 
 class BinScreen extends StatefulWidget {
   const BinScreen({super.key, required this.viewModel});
@@ -60,59 +61,61 @@ class _ArchivesScreenState extends State<BinScreen> {
             ],
           ),
         ),
-        actions: [
-          HeaderAction(
-            onPressed: () {
-              context.go(Routes.archives);
-            },
-            icon: Icons.archive,
-          ),
-          HeaderAction(
-            onPressed: () {
-              context.go(Routes.home);
-            },
-            icon: Icons.home,
-          ),
-        ],
+        actions: [],
       ),
       body: SafeArea(
-        child: ListenableBuilder(
-          listenable: widget.viewModel.load,
-          builder: (context, child) {
-            final running = widget.viewModel.load.running,
-                error = widget.viewModel.load.error;
-            return Loader(
-              error: error,
-              running: running,
-              onError: widget.viewModel.load.execute,
-              child: child!,
-            );
-          },
-          child: ListenableBuilder(
-            listenable: widget.viewModel,
-            builder: (context, _) {
-              return CustomScrollView(
-                slivers: [
-                  SliverList.builder(
-                    itemCount: widget.viewModel.routines.length,
-                    itemBuilder: (_, index) {
-                      return Routine(
-                        index: index,
-                        key: ValueKey(widget.viewModel.routines[index].id),
-                        routine: widget.viewModel.routines[index],
-                        restore: () async {
-                          await widget.viewModel.restore.execute(
-                            widget.viewModel.routines[index].id,
+        child: Stack(
+          children: [
+            ListenableBuilder(
+              listenable: widget.viewModel.load,
+              builder: (context, child) {
+                final running = widget.viewModel.load.running,
+                    error = widget.viewModel.load.error;
+                return Loader(
+                  error: error,
+                  running: running,
+                  onError: widget.viewModel.load.execute,
+                  child: child!,
+                );
+              },
+              child: ListenableBuilder(
+                listenable: widget.viewModel,
+                builder: (context, _) {
+                  return CustomScrollView(
+                    slivers: [
+                      SliverList.builder(
+                        itemCount: widget.viewModel.routines.length,
+                        itemBuilder: (_, index) {
+                          return Routine(
+                            index: index,
+                            key: ValueKey(widget.viewModel.routines[index].id),
+                            routine: widget.viewModel.routines[index],
+                            restore: () async {
+                              await widget.viewModel.restore.execute(
+                                widget.viewModel.routines[index].id,
+                              );
+                              await widget.viewModel.load.execute();
+                            },
                           );
-                          await widget.viewModel.load.execute();
                         },
-                      );
-                    },
-                  ),
-                ],
-              );
-            },
-          ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+            Align(
+              alignment: Alignment.bottomRight,
+              child: FloatingAction(
+                onPressed: () => context.go(Routes.archives),
+                icon: Icons.archive,
+                colorComposition: colorCompositionFromAction(
+                  context,
+                  RoutineActionState.toArchive,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

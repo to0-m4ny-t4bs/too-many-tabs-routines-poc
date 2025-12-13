@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:path/path.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
+import 'package:sqflite/sqflite.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
 import 'package:too_many_tabs/routing/routes.dart';
 import 'package:too_many_tabs/ui/core/loader.dart';
+import 'package:too_many_tabs/ui/core/ui/floating_action.dart';
 import 'package:too_many_tabs/ui/core/ui/header_action.dart';
+import 'package:too_many_tabs/ui/core/ui/routine_action.dart';
 import 'package:too_many_tabs/ui/home/view_models/home_viewmodel.dart';
 import 'package:too_many_tabs/ui/home/widgets/header_routines_dynamic_goal_label.dart';
 import 'package:too_many_tabs/ui/home/widgets/new_routine.dart';
@@ -47,6 +52,10 @@ class HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final darkMode = Theme.of(context).brightness == Brightness.dark;
+
+    const verticalOffset = 100.0;
+    const slideUpPanelMinHeight = 100.0;
+    const slideUpPanelMaxHeight = 340.0;
 
     return Scaffold(
       appBar: AppBar(
@@ -107,10 +116,16 @@ class HomeScreenState extends State<HomeScreen> {
         ),
         actions: [
           HeaderAction(
-            onPressed: () {
-              context.go(Routes.archives);
+            onPressed: () async {
+              final path = await getDatabasesPath();
+              await SharePlus.instance.share(
+                ShareParams(
+                  files: [XFile(join(path, "state.db"))],
+                  title: 'Save state.db',
+                ),
+              );
             },
-            icon: Icons.archive,
+            icon: Icons.download,
           ),
         ],
       ),
@@ -131,6 +146,8 @@ class HomeScreenState extends State<HomeScreen> {
                 );
               },
               child: SlideUp(
+                minHeight: slideUpPanelMinHeight,
+                maxHeight: slideUpPanelMaxHeight,
                 pc: (pcfn) {
                   pc = pcfn();
                 },
@@ -176,29 +193,41 @@ class HomeScreenState extends State<HomeScreen> {
                     ),
                   )
                 : Container(),
+            isPanelOpen || showNewRoutinePopup
+                ? Container()
+                : Align(
+                    alignment: Alignment.bottomRight,
+                    child: FloatingAction(
+                      icon: Icons.add,
+                      onPressed: () => setState(() {
+                        showNewRoutinePopup = true;
+                      }),
+                      colorComposition: colorCompositionFromAction(
+                        context,
+                        RoutineActionState.toAdd,
+                      ),
+                      verticalOffset: verticalOffset,
+                    ),
+                  ),
+            isPanelOpen || showNewRoutinePopup
+                ? Container()
+                : Align(
+                    alignment: Alignment.bottomLeft,
+                    child: FloatingAction(
+                      icon: Icons.archive,
+                      onPressed: () {
+                        context.go(Routes.archives);
+                      },
+                      colorComposition: colorCompositionFromAction(
+                        context,
+                        RoutineActionState.toArchive,
+                      ),
+                      verticalOffset: verticalOffset,
+                    ),
+                  ),
           ],
         ),
       ),
-      floatingActionButton: isPanelOpen || showNewRoutinePopup
-          ? null
-          : Padding(
-              padding: EdgeInsets.only(bottom: 70),
-              child: FloatingActionButton(
-                backgroundColor: darkMode
-                    ? colorScheme.primaryContainer
-                    : colorScheme.primary,
-                foregroundColor: darkMode
-                    ? colorScheme.onPrimaryContainer
-                    : colorScheme.onPrimary,
-                shape: CircleBorder(),
-                child: Icon(Icons.add),
-                onPressed: () {
-                  setState(() {
-                    showNewRoutinePopup = true;
-                  });
-                },
-              ),
-            ),
     );
   }
 }

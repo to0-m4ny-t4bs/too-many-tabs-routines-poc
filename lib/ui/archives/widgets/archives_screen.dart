@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:path/path.dart';
-import 'package:share_plus/share_plus.dart';
-import 'package:sqflite/sqflite.dart';
 import 'package:too_many_tabs/routing/routes.dart';
 import 'package:too_many_tabs/ui/archives/view_models/archives_viewmodel.dart';
 import 'package:too_many_tabs/ui/archives/widgets/routine.dart';
 import 'package:too_many_tabs/ui/core/loader.dart';
-import 'package:too_many_tabs/ui/core/ui/header_action.dart';
+import 'package:too_many_tabs/ui/core/ui/floating_action.dart';
+import 'package:too_many_tabs/ui/core/ui/routine_action.dart';
 
 class ArchivesScreen extends StatefulWidget {
   const ArchivesScreen({super.key, required this.viewModel});
@@ -63,79 +61,82 @@ class _ArchivesScreenState extends State<ArchivesScreen> {
             ],
           ),
         ),
-        actions: [
-          HeaderAction(
-            onPressed: () async {
-              final path = await getDatabasesPath();
-              await SharePlus.instance.share(
-                ShareParams(
-                  files: [XFile(join(path, "state.db"))],
-                  title: 'Save state.db',
-                ),
-              );
-            },
-            icon: Icons.download,
-          ),
-          HeaderAction(
-            onPressed: () {
-              context.go(Routes.bin);
-            },
-            icon: Icons.delete,
-          ),
-          HeaderAction(
-            onPressed: () {
-              context.go(Routes.home);
-            },
-            icon: Icons.home,
-          ),
-        ],
+        actions: [],
       ),
       body: SafeArea(
-        child: ListenableBuilder(
-          listenable: widget.viewModel.load,
-          builder: (context, child) {
-            final running = widget.viewModel.load.running,
-                error = widget.viewModel.load.error;
-            return Loader(
-              error: error,
-              running: running,
-              onError: widget.viewModel.load.execute,
-              child: child!,
-            );
-          },
-          child: ListenableBuilder(
-            listenable: widget.viewModel,
-            builder: (context, _) {
-              return CustomScrollView(
-                slivers: [
-                  SliverList.builder(
-                    itemCount: widget.viewModel.routines.length,
-                    itemBuilder: (_, index) {
-                      return Routine(
-                        index: index,
-                        key: ValueKey(widget.viewModel.routines[index].id),
-                        routine: widget.viewModel.routines[index],
-                        restore: () async {
-                          await widget.viewModel.restore.execute(
-                            widget.viewModel.routines[index].id,
+        child: Stack(
+          children: [
+            ListenableBuilder(
+              listenable: widget.viewModel.load,
+              builder: (context, child) {
+                final running = widget.viewModel.load.running,
+                    error = widget.viewModel.load.error;
+                return Loader(
+                  error: error,
+                  running: running,
+                  onError: widget.viewModel.load.execute,
+                  child: child!,
+                );
+              },
+              child: ListenableBuilder(
+                listenable: widget.viewModel,
+                builder: (context, _) {
+                  return CustomScrollView(
+                    slivers: [
+                      SliverList.builder(
+                        itemCount: widget.viewModel.routines.length,
+                        itemBuilder: (_, index) {
+                          return Routine(
+                            index: index,
+                            key: ValueKey(widget.viewModel.routines[index].id),
+                            routine: widget.viewModel.routines[index],
+                            restore: () async {
+                              await widget.viewModel.restore.execute(
+                                widget.viewModel.routines[index].id,
+                              );
+                              if (context.mounted) {
+                                context.go(Routes.home);
+                              }
+                            },
+                            trash: () async {
+                              await widget.viewModel.bin.execute(
+                                widget.viewModel.routines[index].id,
+                              );
+                              await widget.viewModel.load.execute();
+                            },
                           );
-                          if (context.mounted) {
-                            context.go(Routes.home);
-                          }
                         },
-                        trash: () async {
-                          await widget.viewModel.bin.execute(
-                            widget.viewModel.routines[index].id,
-                          );
-                          await widget.viewModel.load.execute();
-                        },
-                      );
-                    },
-                  ),
-                ],
-              );
-            },
-          ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+            Align(
+              alignment: Alignment.bottomLeft,
+              child: FloatingAction(
+                onPressed: () {
+                  context.go(Routes.bin);
+                },
+                icon: Icons.delete,
+                colorComposition: colorCompositionFromAction(
+                  context,
+                  RoutineActionState.toTrash,
+                ),
+              ),
+            ),
+            Align(
+              alignment: Alignment.bottomRight,
+              child: FloatingAction(
+                onPressed: () => context.go(Routes.home),
+                icon: Icons.home,
+                colorComposition: colorCompositionFromAction(
+                  context,
+                  RoutineActionState.toHome,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
