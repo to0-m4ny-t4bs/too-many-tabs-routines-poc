@@ -43,12 +43,6 @@ class RoutinesList extends StatelessWidget {
                     false, // archive (bin=false)
                   ));
                 },
-                bin: () async {
-                  await viewModel.archiveOrBinRoutine.execute((
-                    viewModel.routines[index].id,
-                    true, // set bin=true
-                  ));
-                },
               ),
             ),
           ],
