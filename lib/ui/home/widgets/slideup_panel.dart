@@ -164,7 +164,7 @@ class _SetGoal extends StatelessWidget {
               ),
               _RoutineLabel(
                 running: running,
-                name: routineName,
+                name: routineName.trim(),
                 color: darkMode ? colorScheme.onPrimary : colorScheme.primary,
                 fontWeight: darkMode
                     ? (running ? FontWeight.w300 : FontWeight.w600)
