@@ -12,11 +12,10 @@ class Routine extends StatelessWidget {
     required this.setGoal,
     required this.startStopSwitch,
     required this.archive,
-    required this.bin,
   });
 
   final RoutineSummary routine;
-  final Function() setGoal, startStopSwitch, archive, bin;
+  final Function() setGoal, startStopSwitch, archive;
 
   @override
   Widget build(BuildContext context) {
@@ -35,14 +34,6 @@ class Routine extends StatelessWidget {
             label: 'Backlog',
             onPressed: (_) {
               archive();
-            },
-          ),
-          RoutineAction(
-            icon: Icons.delete,
-            state: RoutineActionState.toTrash,
-            label: 'Trash',
-            onPressed: (_) {
-              bin();
             },
           ),
         ],
