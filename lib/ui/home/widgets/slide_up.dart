@@ -82,7 +82,12 @@ class _SlideUpState extends State<SlideUp> {
       collapsed: ListenableBuilder(
         listenable: widget.viewModel,
         builder: (context, _) {
-          return Collapsed(runningRoutine: widget.viewModel.pinnedRoutine);
+          final running = widget.viewModel.pinnedRoutine;
+          if (running != null) {
+            final eta = running.lastStarted!.add(running.goal - running.spent);
+            return Collapsed(runningRoutine: running, eta: eta);
+          }
+          return Collapsed();
         },
       ),
       panel: SlideUpPanel(

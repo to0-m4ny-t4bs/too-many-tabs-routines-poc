@@ -43,9 +43,10 @@ class SlideUpPanel extends StatelessWidget {
 }
 
 class Collapsed extends StatelessWidget {
-  const Collapsed({super.key, required this.runningRoutine});
+  const Collapsed({super.key, this.runningRoutine, this.eta});
 
   final RoutineSummary? runningRoutine;
+  final DateTime? eta;
 
   @override
   Widget build(BuildContext context) {
@@ -79,7 +80,8 @@ class Collapsed extends StatelessWidget {
                       fontWeight: darkMode ? FontWeight.w600 : FontWeight.w300,
                     ),
                     _RoutineETA(
-                      routine: runningRoutine!,
+                      eta: eta!,
+                      goal: runningRoutine!.goal,
                       restorationId: 'routine-eta-${runningRoutine!.id}',
                     ),
                   ],
@@ -436,10 +438,15 @@ class _RoutineLabel extends StatelessWidget {
 }
 
 class _RoutineETA extends StatefulWidget {
-  const _RoutineETA({required this.routine, required this.restorationId});
+  const _RoutineETA({
+    required this.eta,
+    required this.goal,
+    required this.restorationId,
+  });
 
-  final RoutineSummary routine;
   final String restorationId;
+  final DateTime eta;
+  final Duration goal;
 
   @override
   createState() => _RoutineETAState();
@@ -448,14 +455,14 @@ class _RoutineETA extends StatefulWidget {
 class _RoutineETAState extends State<_RoutineETA> with RestorationMixin {
   late Timer _timer;
 
-  final _leftMinutes = RestorableInt(0);
+  final _done = RestorableBool(false);
 
   @override
   get restorationId => widget.restorationId;
 
   @override
   void restoreState(RestorationBucket? oldBucket, bool initialRestore) {
-    registerForRestoration(_leftMinutes, 'left_minutes_value');
+    registerForRestoration(_done, 'left_minutes_value');
   }
 
   @override
@@ -474,32 +481,42 @@ class _RoutineETAState extends State<_RoutineETA> with RestorationMixin {
 
   void _startTimer() {
     _timer = Timer.periodic(_refreshPeriod, (_) {
-      final spent =
-          DateTime.now().difference(widget.routine.lastStarted!) +
-          widget.routine.spent;
-      final left = widget.routine.goal - spent;
-      setState(() {
-        _leftMinutes.value = left.inMinutes;
-      });
+      if (DateTime.now().isAfter(widget.eta)) {
+        setState(() {
+          _done.value = true;
+        });
+      }
     });
+  }
+
+  TextStyle _style(double size) {
+    return TextStyle(fontWeight: FontWeight.w300, fontSize: size);
   }
 
   @override
   build(BuildContext context) {
-    const style = TextStyle(fontWeight: FontWeight.w300, fontSize: 12);
-    if (_leftMinutes.value >= 0) {
-      final eta = DateTime.now().add(Duration(minutes: _leftMinutes.value));
-      final hours = eta.hour.toString();
-      final minutes = (eta.minute + 1).toString().padLeft(2, '0');
-      return Text('(ETA: $hours:$minutes)', style: style);
+    if (!_done.value) {
+      var hours = widget.eta.hour.remainder(12).toString();
+      if (hours == "0") {
+        hours = "12";
+      }
+      final minutes = widget.eta.minute.toString().padLeft(2, '0');
+      final tod = widget.eta.hour < 12 ? "am" : "pm";
+      return Row(
+        children: [
+          Text('(ETA: $hours:$minutes', style: _style(12)),
+          Text(tod, style: _style(10)),
+          Text(')', style: _style(12)),
+        ],
+      );
     }
     // this block is the only reason we need to  track of _leftMinutes, though,
     // we might be able to stick with a stateless widget and leave the
     // computation (that should happen only once) to the listenable builder
     // building the Collapsed widget.
     return Text(
-      '(reached ${formatUntilGoal(widget.routine.goal, Duration())})',
-      style: style,
+      '(reached ${formatUntilGoal(widget.goal, Duration())})',
+      style: _style(12),
     );
   }
 }
