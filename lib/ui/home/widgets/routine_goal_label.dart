@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:too_many_tabs/ui/home/widgets/routine_spent_dynamic_label.dart';
 import 'package:too_many_tabs/utils/format_duration.dart';
 
 class RoutineGoalLabel extends StatelessWidget {
@@ -79,43 +80,42 @@ class RoutineGoalDynamicLabel extends StatefulWidget {
   final String? restorationId;
 
   @override
-  createState() => RoutineGoalDynamicLabelState();
+  createState() => _RoutineGoalDynamicLabelState();
 }
 
-class RoutineGoalDynamicLabelState extends State<RoutineGoalDynamicLabel>
-    with RestorationMixin {
+class _RoutineGoalDynamicLabelState extends State<RoutineGoalDynamicLabel> {
   late Timer _timer;
-  final _minutesSpent = RestorableInt(0);
+  late AppLifecycleListener _listener;
 
-  @override
-  String? get restorationId => widget.restorationId;
-
-  @override
-  void restoreState(RestorationBucket? oldBucket, bool initialRestore) {
-    registerForRestoration(_minutesSpent, 'minutes_spent_value');
-  }
+  late Duration _spent;
 
   @override
   initState() {
     super.initState();
     _startTimer();
+    _spent = routineDurationSpent(widget.lastStarted, widget.spent);
+    _listener = AppLifecycleListener(
+      onResume: () {
+        setState(() {
+          _spent = routineDurationSpent(widget.lastStarted, widget.spent);
+        });
+      },
+    );
   }
 
   @override
   dispose() {
     _timer.cancel();
-    _minutesSpent.dispose();
+    _listener.dispose();
     super.dispose();
   }
 
-  static const _refreshPeriod = Duration(milliseconds: 100);
+  static const _refreshPeriod = Duration(seconds: 1);
 
   void _startTimer() {
     _timer = Timer.periodic(_refreshPeriod, (timer) {
       setState(() {
-        _minutesSpent.value =
-            widget.spent.inMinutes +
-            DateTime.now().difference(widget.lastStarted).inMinutes;
+        _spent += _refreshPeriod;
       });
     });
   }
@@ -123,7 +123,7 @@ class RoutineGoalDynamicLabelState extends State<RoutineGoalDynamicLabel>
   @override
   build(BuildContext context) {
     return RoutineGoalLabel(
-      spent: Duration(minutes: _minutesSpent.value),
+      spent: _spent,
       goal: widget.goal,
       running: widget.running,
     );
