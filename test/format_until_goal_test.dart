@@ -38,6 +38,8 @@ void main() {
           (Duration(minutes: 5), Duration(seconds: 30), false, "5min"),
           (Duration(minutes: 1), Duration(seconds: 30), false, "1min"),
           (Duration(minutes: 1), Duration(seconds: 60), false, "done"),
+          (Duration(hours: 2), Duration(seconds: 5), false, "2h"),
+          (Duration(hours: 2), Duration(seconds: 65), false, "1h59"),
         ]) {
       test(
         'Expected "$expected" with formatUntilGoal(goal=$goal, spent=$spent, forceSuffix=$forceSuffix)',

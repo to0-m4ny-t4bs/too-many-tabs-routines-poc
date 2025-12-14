@@ -10,13 +10,14 @@ String formatSpentDuration(Duration d) {
 
 String formatUntilGoal(Duration goal, Duration spent, {bool? forceSuffix}) {
   final left = goal - spent;
-  final hours = left.inHours.remainder(60);
+  final seconds = left.inSeconds.remainder(3600);
+  var minutes = seconds ~/ 60;
+  final carryMinutes = seconds.remainder(60) > 0 ? 1 : 0;
+  minutes += carryMinutes;
+  final carryHours = minutes == 60 ? 1 : 0;
+  minutes = minutes.remainder(60);
+  final hours = left.inHours.remainder(60) + carryHours;
   final singleDigitHour = hours == 0 ? "" : '${hours.toString()}h';
-  final minutes = left.inSeconds <= 0
-      ? left.inMinutes.remainder(60)
-      : (left.inMinutes + (left.inSeconds.remainder(60) > 0 ? 1 : 0)).remainder(
-          60,
-        );
   final twoDigitsMinutes = minutes == 0
       ? ""
       : (hours == 0
