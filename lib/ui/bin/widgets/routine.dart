@@ -37,7 +37,7 @@ class Routine extends StatelessWidget {
               restore();
             },
             icon: Icons.archive,
-            state: ApplicationAction.backlogRoutine,
+            state: ApplicationAction.restoreRoutine,
             label: 'Restore',
           ),
         ],
