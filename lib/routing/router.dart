@@ -10,7 +10,7 @@ import 'package:too_many_tabs/ui/home/widgets/home_screen.dart';
 
 GoRouter router() => GoRouter(
   restorationScopeId: 'router',
-  initialLocation: Routes.home,
+  initialLocation: Routes.settings,
   debugLogDiagnostics: true,
   routes: [
     GoRoute(
@@ -34,6 +34,13 @@ GoRouter router() => GoRouter(
       path: Routes.bin,
       builder: (context, state) {
         final viewModel = BinViewmodel(routinesRepository: context.read());
+        return BinScreen(viewModel: viewModel);
+      },
+    ),
+    GoRoute(
+      path: Routes.settings,
+      builder: (context, state) {
+        final viewModel = SettingsViewModel(settingsRepository: context.read());
         return BinScreen(viewModel: viewModel);
       },
     ),

@@ -1,6 +1,7 @@
 import 'package:logging/logging.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
+import 'package:too_many_tabs/domain/models/settings/settings_summary.dart';
 import 'package:too_many_tabs/utils/result.dart';
 
 class DatabaseClient {
@@ -281,6 +282,32 @@ class DatabaseClient {
       });
 
       return Result.ok(null);
+    } on Exception catch (e) {
+      return Result.error(e);
+    }
+  }
+
+  Future<Result<void>> setSettingOverwriteDatabase(bool setting) async {
+    try {
+      await _database.update('app_settings', {
+        'overwrite_database': setting ? 1 : 0,
+      });
+      return Result.ok(null);
+    } on Exception catch (e) {
+      return Result.error(e);
+    }
+  }
+
+  Future<Result<SettingsSummary>> getSettings() async {
+    try {
+      final rows = await _database.query('app_settings', limit: 1);
+      if (rows.isEmpty) {
+        return Result.error(Exception('app settings unavailables'));
+      }
+      final {'overwrite_database': overwriteDatabase as int} = rows[0];
+      return Result.ok(
+        SettingsSummary(overwriteDatabase: overwriteDatabase == 1),
+      );
     } on Exception catch (e) {
       return Result.error(e);
     }
