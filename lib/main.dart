@@ -18,6 +18,18 @@ import 'package:timezone/data/latest_all.dart' as tz;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  Logger.root.level = Level.ALL;
+  Logger.root.onRecord.listen((record) async {
+    debugPrint(
+      [
+        'level=${record.level}',
+        'time=${record.time}',
+        'logger=${record.loggerName}',
+        'msg=${record.message}',
+      ].join(' '),
+    );
+  });
+
   final resultDatabase = await prepareDatabase();
   final Database db;
   switch (resultDatabase) {
@@ -29,14 +41,6 @@ void main() async {
 
   Logger.root.level = Level.ALL;
   Logger.root.onRecord.listen((record) async {
-    debugPrint(
-      [
-        'level=${record.level}',
-        'time=${record.time}',
-        'logger=${record.loggerName}',
-        'msg=${record.message}',
-      ].join(' '),
-    );
     final client = DatabaseClient(db: db);
     if (record.level >= Level.INFO) {
       client.log(

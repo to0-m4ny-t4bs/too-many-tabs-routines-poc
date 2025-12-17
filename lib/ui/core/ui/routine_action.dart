@@ -49,6 +49,7 @@ ColorComposition colorCompositionFromAction(
       foreground = colorScheme.primary;
       background = colorScheme.surface;
       break;
+    case ApplicationAction.downloadBackup:
     case ApplicationAction.addRoutine:
       background = darkMode
           ? colorScheme.primaryContainer
@@ -102,7 +103,8 @@ enum ApplicationAction {
   addRoutine(6),
   toHome(7),
   toBacklog(8),
-  toArchive(9);
+  toArchive(9),
+  downloadBackup(10);
 
   const ApplicationAction(this.code);
 

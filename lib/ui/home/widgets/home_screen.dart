@@ -2,10 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:go_router/go_router.dart';
-import 'package:path/path.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
-import 'package:sqflite/sqflite.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
 import 'package:too_many_tabs/notifications.dart';
 import 'package:too_many_tabs/routing/routes.dart';
@@ -145,16 +142,8 @@ class HomeScreenState extends State<HomeScreen> {
         ),
         actions: [
           HeaderAction(
-            onPressed: () async {
-              final path = await getDatabasesPath();
-              await SharePlus.instance.share(
-                ShareParams(
-                  files: [XFile(join(path, "state.db"))],
-                  title: 'Save state.db',
-                ),
-              );
-            },
-            icon: Icons.download,
+            icon: Icons.settings,
+            onPressed: () => context.go(Routes.settings),
           ),
         ],
       ),

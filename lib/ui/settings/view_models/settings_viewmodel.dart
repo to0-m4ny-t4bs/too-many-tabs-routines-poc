@@ -28,9 +28,7 @@ class SettingsViewmodel extends ChangeNotifier {
           return Result.error(resultGet.error);
         case Ok<SettingsSummary>():
           _settings = resultGet.value;
-          _log.fine(
-            'loaded settings (overwrite = ${settings.overwriteDatabase}',
-          );
+          _log.fine('loaded settings $settings');
       }
       return Result.ok(null);
     } finally {

@@ -7,6 +7,8 @@ import 'package:too_many_tabs/ui/bin/view_models/bin_viewmodel.dart';
 import 'package:too_many_tabs/ui/bin/widgets/bin_screen.dart';
 import 'package:too_many_tabs/ui/home/view_models/home_viewmodel.dart';
 import 'package:too_many_tabs/ui/home/widgets/home_screen.dart';
+import 'package:too_many_tabs/ui/settings/view_models/settings_viewmodel.dart';
+import 'package:too_many_tabs/ui/settings/widgets/settings_screen.dart';
 
 GoRouter router() => GoRouter(
   restorationScopeId: 'router',
@@ -40,8 +42,8 @@ GoRouter router() => GoRouter(
     GoRoute(
       path: Routes.settings,
       builder: (context, state) {
-        final viewModel = SettingsViewModel(settingsRepository: context.read());
-        return BinScreen(viewModel: viewModel);
+        final viewModel = SettingsViewmodel(repository: context.read());
+        return SettingsScreen(viewModel: viewModel);
       },
     ),
   ],

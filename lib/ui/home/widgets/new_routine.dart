@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:too_many_tabs/ui/core/ui/routine_action.dart';
 import 'package:too_many_tabs/ui/home/view_models/home_viewmodel.dart';
 
 class NewRoutine extends StatefulWidget {
@@ -28,6 +29,10 @@ class _NewRoutineState extends State<NewRoutine> {
 
   @override
   build(BuildContext context) {
+    final addComp = colorCompositionFromAction(
+      context,
+      ApplicationAction.addRoutine,
+    );
     final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
@@ -90,8 +95,8 @@ class _NewRoutineState extends State<NewRoutine> {
                   }
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: colorScheme.primary,
-                  foregroundColor: colorScheme.onPrimary,
+                  backgroundColor: addComp.background,
+                  foregroundColor: addComp.foreground,
                 ),
                 child: const Text('Add routine'),
               ),
