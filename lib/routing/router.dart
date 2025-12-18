@@ -12,7 +12,7 @@ import 'package:too_many_tabs/ui/settings/widgets/settings_screen.dart';
 
 GoRouter router() => GoRouter(
   restorationScopeId: 'router',
-  initialLocation: Routes.settings,
+  initialLocation: Routes.home,
   debugLogDiagnostics: true,
   routes: [
     GoRoute(
