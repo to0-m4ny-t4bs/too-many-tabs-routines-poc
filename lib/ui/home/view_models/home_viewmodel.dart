@@ -162,6 +162,7 @@ class HomeViewmodel extends ChangeNotifier {
         NotificationCode.routineHalfGoal,
         NotificationCode.routineGoalIn10Minutes,
         NotificationCode.routineGoalIn5Minutes,
+        NotificationCode.routineSettleCheck,
       ]) {
         await _notificationsPlugin.cancel(code.code);
       }
@@ -170,9 +171,8 @@ class HomeViewmodel extends ChangeNotifier {
       );
       _log.fine('_updateNotifications: pinnedRoutine: $_pinnedRoutine');
       if (_pinnedRoutine == null) return;
-      final untilHalfWay = Duration(
-        minutes: (_pinnedRoutine!.goal - _pinnedRoutine!.spent).inMinutes ~/ 2,
-      );
+      final left = _pinnedRoutine!.goal - _pinnedRoutine!.spent;
+      final untilHalfWay = Duration(minutes: left.inMinutes ~/ 2);
       final roundedLastStarted = _pinnedRoutine!.lastStarted!.add(
         // e.g. if started at 12:00:40 rounded would be 12:01:00
         // and therefore notification is delayed by 20 seconds
@@ -188,7 +188,7 @@ class HomeViewmodel extends ChangeNotifier {
         try {
           final sched = await scheduleNotification(
             title: _pinnedRoutine!.name,
-            body: "We're halfway there!",
+            body: "Halfway there! ${untilHalfWay.inMinutes}min left.",
             id: NotificationCode.routineHalfGoal,
             schedule: halfWay,
           );
@@ -197,6 +197,21 @@ class HomeViewmodel extends ChangeNotifier {
           );
         } catch (e) {
           _log.warning('_updateNotifications: schedule routineHalfGoal: $e');
+        }
+      }
+      if (!scheduleHalfWay && left.inMinutes >= 27) {
+        // worst case: 27 minutes left we have at least 7 min between notifications
+        try {
+          final t = DateTime.now().add(Duration(minutes: 10));
+          final sched = await scheduleNotification(
+            title: _pinnedRoutine!.name,
+            body: "Settle in! ${left.inMinutes}m left.",
+            id: NotificationCode.routineSettleCheck,
+            schedule: t,
+          );
+          _log.fine('_updateNotifications: routineSettleCheck at $sched');
+        } catch (e) {
+          _log.warning('_updateNotifications: routineSettleCheck: $e');
         }
       }
 
