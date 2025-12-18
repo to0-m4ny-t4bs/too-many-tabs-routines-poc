@@ -205,11 +205,13 @@ class HomeViewmodel extends ChangeNotifier {
           final t = DateTime.now().add(Duration(minutes: 10));
           final sched = await scheduleNotification(
             title: _pinnedRoutine!.name,
-            body: "Settle in! ${left.inMinutes}m left.",
+            body: "Settle in! ${left.inMinutes - 10}m left.",
             id: NotificationCode.routineSettleCheck,
             schedule: t,
           );
-          _log.fine('_updateNotifications: routineSettleCheck at $sched');
+          _log.fine(
+            '_updateNotifications: routineSettleCheck at $sched (${left.inMinutes - 10})',
+          );
         } catch (e) {
           _log.warning('_updateNotifications: routineSettleCheck: $e');
         }
