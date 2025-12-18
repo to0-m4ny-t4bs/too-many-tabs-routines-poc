@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
@@ -43,59 +41,55 @@ class SlideUpPanel extends StatelessWidget {
 }
 
 class Collapsed extends StatelessWidget {
-  const Collapsed({super.key, this.runningRoutine, this.eta});
+  const Collapsed({super.key, required this.viewModel});
 
-  final RoutineSummary? runningRoutine;
-  final DateTime? eta;
+  final HomeViewmodel viewModel;
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final darkMode = Theme.of(context).brightness == Brightness.dark;
     return Container(
-      padding: EdgeInsets.only(top: 4),
-      child: Column(
-        spacing: 4,
-        children: [
-          runningRoutine ==
-                  null // running routine
-              ? Text(
-                  'Tap to pick a routine',
+      padding: EdgeInsets.only(top: 5),
+      child: ListenableBuilder(
+        listenable: viewModel,
+        builder: (context, _) {
+          if (viewModel.pinnedRoutine != null) {
+            final running = viewModel.pinnedRoutine!;
+            final done = running.spent > running.goal;
+            final eta = running.lastStarted!.add(running.goal - running.spent);
+            return Column(
+              spacing: 4,
+              children: [
+                _RoutineLabel(running: true, name: running.name),
+                _RoutineETA(eta: eta, goal: running.goal, done: done),
+              ],
+            );
+          } else {
+            return Column(
+              spacing: 4,
+              children: [
+                Text(
+                  'Long press to pick routines',
                   style: TextStyle(
                     color: darkMode
                         ? colorScheme.onPrimaryContainer
                         : colorScheme.secondary,
                   ),
-                )
-              : Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  spacing: 6,
-                  children: [
-                    _RoutineLabel(
-                      running: true,
-                      name: runningRoutine!.name,
-                      color: darkMode
-                          ? colorScheme.onPrimaryContainer
-                          : colorScheme.primary,
-                      fontWeight: darkMode ? FontWeight.w600 : FontWeight.w300,
-                    ),
-                    _RoutineETA(
-                      eta: eta!,
-                      goal: runningRoutine!.goal,
-                      restorationId: 'routine-eta-${runningRoutine!.id}',
-                    ),
-                  ],
                 ),
-          Expanded(
-            child: Text(
-              'Long press to set goals',
-              style: TextStyle(
-                color: darkMode ? colorScheme.secondary : colorScheme.onSurface,
-                fontWeight: darkMode ? FontWeight.w500 : FontWeight.w200,
-              ),
-            ),
-          ),
-        ],
+                Text(
+                  'Tap to set goals',
+                  style: TextStyle(
+                    color: darkMode
+                        ? colorScheme.secondary
+                        : colorScheme.onSurface,
+                    fontWeight: darkMode ? FontWeight.w500 : FontWeight.w200,
+                  ),
+                ),
+              ],
+            );
+          }
+        },
       ),
     );
   }
@@ -161,14 +155,6 @@ class _SetGoal extends StatelessWidget {
                       : colorScheme.onSurface,
                   fontWeight: FontWeight.w300,
                 ),
-              ),
-              _RoutineLabel(
-                running: running,
-                name: routineName.trim(),
-                color: darkMode ? colorScheme.onPrimary : colorScheme.primary,
-                fontWeight: darkMode
-                    ? (running ? FontWeight.w300 : FontWeight.w600)
-                    : (running ? FontWeight.w300 : FontWeight.w400),
               ),
               Text(
                 'daily goal',
@@ -385,139 +371,65 @@ class _GoalWheel extends StatelessWidget {
 }
 
 class _RoutineLabel extends StatelessWidget {
-  const _RoutineLabel({
-    required this.name,
-    required this.running,
-    required this.color,
-    required this.fontWeight,
-  });
+  const _RoutineLabel({required this.name, required this.running});
 
   final String name;
   final bool running;
-  final Color color;
-  final FontWeight fontWeight;
-
-  //static const blurOffset = .1;
-  //static const blurRadius = 2.0;
 
   @override
   build(BuildContext context) {
-    //final shadowColor = running
-    //    ? Theme.of(context).colorScheme.primary
-    //    : Theme.of(context).colorScheme.primaryFixed;
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 2),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        //color: running
-        //    ? Theme.of(context).colorScheme.primary
-        //    : Theme.of(context).colorScheme.primaryFixed,
-        //boxShadow: [
-        //  BoxShadow(
-        //    color: shadowColor,
-        //    offset: const Offset(blurOffset, blurOffset),
-        //    blurRadius: blurRadius,
-        //  ),
-        //  BoxShadow(
-        //    color: shadowColor,
-        //    offset: const Offset(-blurOffset, blurOffset),
-        //    blurRadius: blurRadius,
-        //  ),
-        //],
-      ),
-      child: Padding(
-        padding: EdgeInsets.symmetric(),
-        // padding: EdgeInsets.symmetric(vertical: 4, horizontal: 10),
-        child: Text(
-          name.trim(),
-          style: TextStyle(fontWeight: fontWeight, color: color),
-        ),
+    final colorScheme = Theme.of(context).colorScheme;
+    final darkMode = Theme.of(context).brightness == Brightness.dark;
+    return Text(
+      name.trim(),
+      style: TextStyle(
+        color: darkMode
+            ? colorScheme.onPrimaryContainer
+            : colorScheme.secondary,
       ),
     );
   }
 }
 
-class _RoutineETA extends StatefulWidget {
+class _RoutineETA extends StatelessWidget {
   const _RoutineETA({
+    required this.done,
     required this.eta,
     required this.goal,
-    required this.restorationId,
   });
-
-  final String restorationId;
-  final DateTime eta;
+  final bool done;
+  final DateTime? eta;
   final Duration goal;
 
-  @override
-  createState() => _RoutineETAState();
-}
-
-class _RoutineETAState extends State<_RoutineETA> with RestorationMixin {
-  late Timer _timer;
-
-  final _done = RestorableBool(false);
-
-  @override
-  get restorationId => widget.restorationId;
-
-  @override
-  void restoreState(RestorationBucket? oldBucket, bool initialRestore) {
-    registerForRestoration(_done, 'left_minutes_value');
-  }
-
-  @override
-  initState() {
-    super.initState();
-    _startTimer();
-  }
-
-  @override
-  void dispose() {
-    _timer.cancel();
-    super.dispose();
-  }
-
-  static const _refreshPeriod = Duration(seconds: 1);
-
-  void _startTimer() {
-    _timer = Timer.periodic(_refreshPeriod, (timer) {
-      if (DateTime.now().isAfter(widget.eta)) {
-        setState(() {
-          _done.value = true;
-        });
-        timer.cancel();
-      }
-    });
-  }
-
-  TextStyle _style(double size) {
-    return TextStyle(fontWeight: FontWeight.w300, fontSize: size);
+  TextStyle _style(BuildContext context, double? size) {
+    final fontWeight = Theme.of(context).brightness == Brightness.dark
+        ? FontWeight.w500
+        : FontWeight.w200;
+    return TextStyle(fontWeight: fontWeight, fontSize: size);
   }
 
   @override
   build(BuildContext context) {
-    if (!_done.value) {
-      var hours = widget.eta.hour.remainder(12).toString();
+    if (!done) {
+      var hours = eta!.hour.remainder(12).toString();
       if (hours == "0") {
         hours = "12";
       }
-      final minutes = widget.eta.minute.toString().padLeft(2, '0');
-      final tod = widget.eta.hour < 12 ? "am" : "pm";
+      final minutes = eta!.minute.toString().padLeft(2, '0');
+      final tod = eta!.hour < 12 ? "am" : "pm";
       return Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        spacing: 5,
         children: [
-          Text('(ETA: $hours:$minutes', style: _style(12)),
-          Text(tod, style: _style(10)),
-          Text(')', style: _style(12)),
+          Text('ETA', style: _style(context, 12)),
+          Text('$hours:$minutes', style: _style(context, null)),
+          Text(tod, style: _style(context, 12)),
         ],
       );
     }
-    // this block is the only reason we need to  track of _leftMinutes, though,
-    // we might be able to stick with a stateless widget and leave the
-    // computation (that should happen only once) to the listenable builder
-    // building the Collapsed widget.
     return Text(
-      '(reached ${formatUntilGoal(widget.goal, Duration())})',
-      style: _style(12),
+      'Completed (${formatUntilGoal(goal, Duration())})',
+      style: _style(context, null),
     );
   }
 }

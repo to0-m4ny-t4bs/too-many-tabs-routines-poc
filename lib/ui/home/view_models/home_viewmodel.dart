@@ -330,15 +330,19 @@ class HomeViewmodel extends ChangeNotifier {
   }
 
   Future<Result<RoutineSummary?>> _updateRunningRoutine() async {
-    final resultRunning = await _routinesRepository.getRunningRoutine();
-    switch (resultRunning) {
-      case Error<RoutineSummary?>():
-        _log.warning('_load get running routine: ${resultRunning.error}');
-      case Ok<RoutineSummary?>():
-        _pinnedRoutine = resultRunning.value;
-        await _updateNotifications();
+    try {
+      final resultRunning = await _routinesRepository.getRunningRoutine();
+      switch (resultRunning) {
+        case Error<RoutineSummary?>():
+          _log.warning('_load get running routine: ${resultRunning.error}');
+        case Ok<RoutineSummary?>():
+          _pinnedRoutine = resultRunning.value;
+          await _updateNotifications();
+      }
+      return resultRunning;
+    } finally {
+      notifyListeners();
     }
-    return resultRunning;
   }
 
   Future<Result<void>> _startOrStopRoutine(int id) async {
