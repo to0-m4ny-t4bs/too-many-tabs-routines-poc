@@ -34,6 +34,7 @@ Future<tz.TZDateTime> scheduleNotification({
     interruptionLevel: InterruptionLevel.timeSensitive,
     sound: 'ding.aif',
   );
+  //const androidNotificationsDetails = AndroidNotificationDetails(channelId, channelName)
   final notificationDetails = NotificationDetails(
     iOS: darwinNotificationDetails,
   );

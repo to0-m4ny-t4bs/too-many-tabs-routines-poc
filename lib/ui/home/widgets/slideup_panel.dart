@@ -50,7 +50,7 @@ class Collapsed extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final darkMode = Theme.of(context).brightness == Brightness.dark;
     return Container(
-      padding: EdgeInsets.only(top: 10),
+      padding: EdgeInsets.only(top: 5),
       child: ListenableBuilder(
         listenable: viewModel,
         builder: (context, _) {
@@ -78,7 +78,7 @@ class Collapsed extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  'And your ass will follow',
+                  'and your ass will follow.',
                   style: TextStyle(
                     color: darkMode
                         ? colorScheme.secondary
@@ -138,7 +138,6 @@ class _SetGoal extends StatelessWidget {
                 ],
         ),
       ),
-      padding: EdgeInsets.only(top: 10),
       child: Column(
         spacing: 17,
         crossAxisAlignment: CrossAxisAlignment.center,
