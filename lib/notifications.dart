@@ -34,9 +34,14 @@ Future<tz.TZDateTime> scheduleNotification({
     interruptionLevel: InterruptionLevel.timeSensitive,
     sound: 'ding.aif',
   );
-  //const androidNotificationsDetails = AndroidNotificationDetails(channelId, channelName)
+  const androidNotificationDetails = AndroidNotificationDetails(
+    'ttt_routines',
+    'ttt_routines',
+    sound: RawResourceAndroidNotificationSound('ding'),
+  );
   final notificationDetails = NotificationDetails(
     iOS: darwinNotificationDetails,
+    android: androidNotificationDetails,
   );
   final zonedSchedule = tz.TZDateTime.from(schedule, tz.local);
   await flutterLocalNotificationsPlugin.zonedSchedule(

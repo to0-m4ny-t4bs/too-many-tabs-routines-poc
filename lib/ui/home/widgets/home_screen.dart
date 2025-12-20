@@ -32,7 +32,6 @@ class HomeScreenState extends State<HomeScreen> {
   PanelController? pc;
 
   late final AppLifecycleListener _listener;
-  bool _notificationsEnabled = false;
 
   @override
   void initState() {
@@ -61,9 +60,7 @@ class HomeScreenState extends State<HomeScreen> {
               >()
               ?.areNotificationsEnabled() ??
           false;
-      setState(() {
-        _notificationsEnabled = granted;
-      });
+      debugPrint('isAndroidPermissionGranted: $granted');
     }
   }
 
@@ -80,11 +77,16 @@ class HomeScreenState extends State<HomeScreen> {
               .resolvePlatformSpecificImplementation<
                 AndroidFlutterLocalNotificationsPlugin
               >();
-      final bool? grantedNotificationsPermission = await androidImplementation
+      final grantedNotificationsPermission = await androidImplementation
           ?.requestNotificationsPermission();
-      setState(() {
-        _notificationsEnabled = grantedNotificationsPermission ?? false;
-      });
+      debugPrint(
+        'android: grantedNotificationsPermission: $grantedNotificationsPermission',
+      );
+      final grantedExactAlarmsPermission = await androidImplementation
+          ?.requestExactAlarmsPermission();
+      debugPrint(
+        'android: grantedExactAlarmsPermission: $grantedExactAlarmsPermission',
+      );
     }
   }
 
