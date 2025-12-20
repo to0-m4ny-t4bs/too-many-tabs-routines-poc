@@ -61,8 +61,12 @@ void main() async {
     notificationCategories: darwinNotificationCategories,
   );
 
+  final AndroidInitializationSettings initializationSettingsAndroid =
+      AndroidInitializationSettings('app_icon');
+
   final initializationSettings = InitializationSettings(
     iOS: initializationSettingsDarwin,
+    android: initializationSettingsAndroid,
   );
 
   await flutterLocalNotificationsPlugin.initialize(

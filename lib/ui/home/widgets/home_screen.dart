@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -31,6 +32,7 @@ class HomeScreenState extends State<HomeScreen> {
   PanelController? pc;
 
   late final AppLifecycleListener _listener;
+  bool _notificationsEnabled = false;
 
   @override
   void initState() {
@@ -50,12 +52,40 @@ class HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  Future<void> isAndroidPermissionGranted() async {
+    if (Platform.isAndroid) {
+      final bool granted =
+          await flutterLocalNotificationsPlugin
+              .resolvePlatformSpecificImplementation<
+                AndroidFlutterLocalNotificationsPlugin
+              >()
+              ?.areNotificationsEnabled() ??
+          false;
+      setState(() {
+        _notificationsEnabled = granted;
+      });
+    }
+  }
+
   Future<void> _requestPermissions() async {
-    await flutterLocalNotificationsPlugin
-        .resolvePlatformSpecificImplementation<
-          IOSFlutterLocalNotificationsPlugin
-        >()
-        ?.requestPermissions(alert: true, badge: true, sound: true);
+    if (Platform.isIOS) {
+      await flutterLocalNotificationsPlugin
+          .resolvePlatformSpecificImplementation<
+            IOSFlutterLocalNotificationsPlugin
+          >()
+          ?.requestPermissions(alert: true, badge: true, sound: true);
+    } else if (Platform.isAndroid) {
+      final AndroidFlutterLocalNotificationsPlugin? androidImplementation =
+          flutterLocalNotificationsPlugin
+              .resolvePlatformSpecificImplementation<
+                AndroidFlutterLocalNotificationsPlugin
+              >();
+      final bool? grantedNotificationsPermission = await androidImplementation
+          ?.requestNotificationsPermission();
+      setState(() {
+        _notificationsEnabled = grantedNotificationsPermission ?? false;
+      });
+    }
   }
 
   void _configureSelectNotificationSubject() {
