@@ -10,11 +10,13 @@ import 'package:too_many_tabs/routing/routes.dart';
 import 'package:too_many_tabs/ui/core/loader.dart';
 import 'package:too_many_tabs/ui/core/ui/floating_action.dart';
 import 'package:too_many_tabs/ui/core/ui/header_action.dart';
+import 'package:too_many_tabs/ui/core/ui/label.dart';
 import 'package:too_many_tabs/ui/core/ui/routine_action.dart';
 import 'package:too_many_tabs/ui/home/view_models/home_viewmodel.dart';
-import 'package:too_many_tabs/ui/home/widgets/header_routines_dynamic_goal_label.dart';
+import 'package:too_many_tabs/ui/home/widgets/header_eta.dart';
 import 'package:too_many_tabs/ui/home/widgets/new_routine.dart';
 import 'package:too_many_tabs/ui/home/widgets/slide_up.dart';
+import 'package:too_many_tabs/utils/notification_code.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, required this.viewModel});
@@ -43,6 +45,7 @@ class HomeScreenState extends State<HomeScreen> {
     );
     _requestPermissions();
     _configureSelectNotificationSubject();
+    isAndroidPermissionGranted();
 
     const MethodChannel(
       'com.example.tooManyTabs/settings',
@@ -133,39 +136,31 @@ class HomeScreenState extends State<HomeScreen> {
                     spacing: 6,
                     children: [
                       Text(
-                        'You\'ve',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w300,
-                          fontSize: 16,
-                          color: darkMode
-                              ? colorScheme.onPrimaryContainer
-                              : colorScheme.onPrimaryFixed,
-                        ),
-                      ),
-                      Text(
                         '${widget.viewModel.routines.length}',
                         style: TextStyle(
-                          color: darkMode
-                              ? colorScheme.onPrimaryContainer
-                              : colorScheme.onPrimaryFixed,
+                          color: labelColor(
+                            context,
+                            Label.homeScreenNumberOfPlannedRoutines,
+                          ),
                           fontWeight: FontWeight.w400,
                           fontSize: 20,
                         ),
                       ),
                       Text(
-                        'routine${widget.viewModel.routines.length <= 1 ? '' : 's'} planned today.',
+                        'routine${widget.viewModel.routines.length <= 1 ? '' : 's'} planned today',
                         style: TextStyle(
-                          color: darkMode
-                              ? colorScheme.onPrimaryContainer
-                              : colorScheme.onPrimaryFixed,
+                          color: labelColor(
+                            context,
+                            Label.homeScreenRoutinesPlannedToday,
+                          ),
                           fontWeight: FontWeight.w300,
                           fontSize: 16,
                         ),
                       ),
                     ],
                   ),
-                  HeaderRoutinesDynamicGoalLabel(
-                    routines: widget.viewModel.routines,
+                  Row(
+                    children: [HeaderEta(routines: widget.viewModel.routines)],
                   ),
                 ],
               );

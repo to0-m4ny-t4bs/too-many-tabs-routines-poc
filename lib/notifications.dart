@@ -37,7 +37,10 @@ Future<tz.TZDateTime> scheduleNotification({
   const androidNotificationDetails = AndroidNotificationDetails(
     'ttt_routines',
     'ttt_routines',
-    sound: RawResourceAndroidNotificationSound('ding'),
+    priority: Priority.max,
+    importance: Importance.max,
+    fullScreenIntent: true,
+    // sound: RawResourceAndroidNotificationSound('@raw/ding'),
   );
   final notificationDetails = NotificationDetails(
     iOS: darwinNotificationDetails,

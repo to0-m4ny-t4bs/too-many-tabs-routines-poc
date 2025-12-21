@@ -62,7 +62,7 @@ void main() async {
   );
 
   final AndroidInitializationSettings initializationSettingsAndroid =
-      AndroidInitializationSettings('app_icon');
+      AndroidInitializationSettings('@mipmap/ic_launcher');
 
   final initializationSettings = InitializationSettings(
     iOS: initializationSettingsDarwin,
