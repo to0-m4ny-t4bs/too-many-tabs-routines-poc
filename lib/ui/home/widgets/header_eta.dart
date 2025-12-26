@@ -114,7 +114,7 @@ class _HeaderEtaSTate extends State<HeaderEta> {
 
   String _format(DateTime t) {
     var h = t.hour;
-    if (h == 0) {
+    if (h == 0 || h == 12) {
       h = 12;
     } else {
       h = h.remainder(12);
