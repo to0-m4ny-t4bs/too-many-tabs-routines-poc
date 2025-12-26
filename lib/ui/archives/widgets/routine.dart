@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
 import 'package:too_many_tabs/ui/core/ui/routine_action.dart';
 import 'package:too_many_tabs/utils/format_duration.dart';
+import 'package:too_many_tabs/ui/core/colors.dart' as comp;
 
 class Routine extends StatelessWidget {
   const Routine({
@@ -27,40 +27,48 @@ class Routine extends StatelessWidget {
     final foreground = index % 2 == (darkMode ? 0 : 1)
         ? colorScheme.onSurface
         : colorScheme.onSurface;
-    return Slidable(
-      key: key,
-      endActionPane: ActionPane(
-        dismissible: DismissiblePane(onDismissed: restore, closeOnCancel: true),
-        motion: BehindMotion(),
-        children: [
-          RoutineAction(
-            onPressed: (_) {
-              restore();
-            },
-            icon: Icons.add_task,
-            state: ApplicationAction.rescheduleRoutine,
-            label: 'Schedule',
+    final dismissReschedule = comp.Colors(
+      context,
+      ApplicationAction.rescheduleRoutine,
+    );
+    final dismissArchive = comp.Colors(context, ApplicationAction.toArchive);
+    return Dismissible(
+      key: ValueKey(key),
+      // left to right: toArchive
+      background: Container(
+        color: dismissArchive.background,
+        child: Padding(
+          padding: EdgeInsets.only(left: 25),
+          child: Row(
+            children: [Icon(Icons.delete, color: dismissArchive.foreground)],
           ),
-        ],
+        ),
       ),
-      startActionPane: ActionPane(
-        dismissible: DismissiblePane(onDismissed: trash, closeOnCancel: true),
-        motion: BehindMotion(),
-        children: [
-          RoutineAction(
-            onPressed: (_) {
-              trash();
-            },
-            icon: Icons.delete,
-            state: ApplicationAction.archiveRoutine,
-            label: 'Trash',
+      // right to left: rescheduleRoutine
+      secondaryBackground: Container(
+        color: dismissReschedule.background,
+        child: Padding(
+          padding: EdgeInsets.only(right: 25),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Icon(Icons.add_task, color: dismissReschedule.foreground),
+            ],
           ),
-        ],
+        ),
       ),
+      onDismissed: (direction) {
+        if (direction == DismissDirection.startToEnd) {
+          trash();
+        }
+        if (direction == DismissDirection.endToStart) {
+          restore();
+        }
+      },
       child: Container(
         color: background,
         child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
