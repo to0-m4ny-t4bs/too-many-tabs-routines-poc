@@ -34,14 +34,20 @@ class _HeaderRoutinesDynamicGoalLabelState
         inPause = false;
         final spent =
             DateTime.now().difference(routine.lastStarted!) + routine.spent;
-        goal += routine.goal - spent;
+        final left = routine.goal - spent;
+        if (left > Duration()) {
+          goal += left;
+        }
         continue;
       }
       if (routine.lastStarted == null) {
         goal += routine.goal;
         continue;
       }
-      goal += routine.goal - routine.spent;
+      final left = routine.goal - routine.spent;
+      if (left > Duration()) {
+        goal += left;
+      }
     }
     if (inPause && _ticking) {
       _ticking = false;

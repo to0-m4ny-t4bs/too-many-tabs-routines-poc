@@ -49,7 +49,9 @@ class _HeaderEtaSTate extends State<HeaderEta> {
             (routine.running
                 ? now.difference(routine.lastStarted!)
                 : Duration());
-        eta = eta.add(left);
+        if (left > Duration()) {
+          eta = eta.add(left);
+        }
       }
       if (inPause && !_ticking) {
         _ticking = true;
