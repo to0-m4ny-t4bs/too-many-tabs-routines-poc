@@ -32,7 +32,7 @@ class _RoutinesListState extends State<RoutinesList> {
   @override
   build(BuildContext context) {
     return SafeArea(
-      minimum: EdgeInsets.only(bottom: 150),
+      minimum: EdgeInsets.only(bottom: 150, top: 10),
       child: ListenableBuilder(
         listenable: widget.viewModel,
         builder: (context, _) {

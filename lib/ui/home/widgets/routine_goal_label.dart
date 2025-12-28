@@ -31,36 +31,90 @@ class RoutineGoalLabel extends StatelessWidget {
           : (running ? FontWeight.w600 : FontWeight.w300),
     );
 
-    final textStyleDone = TextStyle(
-      color: colorScheme.onSurface,
-      fontSize: Theme.of(context).textTheme.labelMedium!.fontSize,
-      fontWeight: FontWeight.w200,
-    );
-
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        color: done
-            ? colorScheme.surfaceContainerHigh
-            : (running
+    return (running && !done)
+        ? Transform.translate(
+            offset: Offset(darkMode ? 0 : 13, 0),
+            child: Container(
+              padding: EdgeInsets.symmetric(
+                vertical: 5,
+                horizontal: darkMode ? 0 : 15,
+              ),
+              decoration: darkMode
+                  ? null
+                  : BoxDecoration(
+                      borderRadius: BorderRadius.horizontal(
+                        left: Radius.circular(9),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: (colorScheme.primary).withAlpha(
+                            (0.04 * 255).toInt(),
+                          ),
+                          blurRadius: 4,
+                          offset: const Offset(0, -3),
+                          spreadRadius: 0,
+                        ),
+                        BoxShadow(
+                          color: (colorScheme.primary).withAlpha(
+                            (255 * 0.02).toInt(),
+                          ),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                          spreadRadius: 0,
+                        ),
+                      ],
+                    ),
+              child: Row(
+                spacing: 2,
+                children: [
+                  Text(
+                    'Still',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 13,
+                      color: darkMode
+                          ? colorScheme.primary
+                          : colorScheme.primaryContainer,
+                    ),
+                  ),
+                  Text(
+                    formatUntilGoal(goal, spent),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 13,
+                      color: darkMode
+                          ? colorScheme.primary
+                          : colorScheme.primaryContainer,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          )
+        : done
+        ? Icon(
+            Icons.done,
+            color: colorScheme.primary.withAlpha((.6 * 255).round()),
+          )
+        : Container(
+            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(5),
+              color: (running
                   ? (darkMode ? colorScheme.primary : colorScheme.primary)
                   : (darkMode
                         ? colorScheme.primaryContainer
                         : colorScheme.secondaryContainer)),
-      ),
-      child: done
-          ? Text('Completed', style: textStyleDone)
-          : (!running
-                ? Text(formatUntilGoal(goal, spent), style: textStyle)
-                : Row(
-                    spacing: 4,
-                    children: [
-                      Text('Done within', style: textStyle),
-                      Text(formatUntilGoal(goal, spent), style: textStyle),
-                    ],
-                  )),
-    );
+            ),
+            child: Text(formatUntilGoal(goal, spent), style: textStyle),
+            //: Row(
+            //    spacing: 4,
+            //    children: [
+            //      Text('Done within', style: textStyle),
+            //      Text(formatUntilGoal(goal, spent), style: textStyle),
+            //    ],
+            //  )),
+          );
   }
 }
 
