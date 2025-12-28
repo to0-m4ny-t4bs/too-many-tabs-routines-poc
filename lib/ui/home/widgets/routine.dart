@@ -57,7 +57,7 @@ class Routine extends StatelessWidget {
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 20),
                       child: Container(
-                        width: 7,
+                        width: 5,
                         height: 30,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(7),
@@ -74,8 +74,8 @@ class Routine extends StatelessWidget {
                     Flexible(
                       child: Padding(
                         padding: EdgeInsets.symmetric(
-                          horizontal: 0,
-                          vertical: 12,
+                          horizontal: 8,
+                          vertical: 2,
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
