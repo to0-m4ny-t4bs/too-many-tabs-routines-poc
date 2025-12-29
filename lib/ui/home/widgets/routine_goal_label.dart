@@ -10,13 +10,16 @@ class RoutineGoalLabel extends StatelessWidget {
     required this.spent,
     required this.goal,
     required this.running,
+    required this.lastStarted,
   });
   final Duration spent, goal;
   final bool running;
+  final DateTime? lastStarted;
 
   @override
   build(BuildContext context) {
     final done = spent.inMinutes >= goal.inMinutes;
+    final DateTime eta = DateTime.now().add(goal - spent);
 
     final colorScheme = Theme.of(context).colorScheme;
     final darkMode = Theme.of(context).brightness == Brightness.dark;
@@ -36,28 +39,78 @@ class RoutineGoalLabel extends StatelessWidget {
             offset: Offset(10, 0),
             child: Container(
               padding: EdgeInsets.symmetric(vertical: 5),
-              child: Row(
-                spacing: 4,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text(
-                    'Left:',
-                    style: TextStyle(
-                      fontWeight: darkMode ? FontWeight.w700 : FontWeight.w900,
-                      fontSize: 13,
-                      color: darkMode
-                          ? colorScheme.primary
-                          : colorScheme.primaryContainer,
-                    ),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    textBaseline: TextBaseline.alphabetic,
+                    spacing: 3,
+                    children: [
+                      Text(
+                        'ETA:',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: darkMode
+                              ? FontWeight.w200
+                              : FontWeight.w400,
+                        ),
+                      ),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.baseline,
+                        textBaseline: TextBaseline.alphabetic,
+                        spacing: 1,
+                        children: [
+                          Text(
+                            _format(eta),
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: darkMode
+                                  ? FontWeight.w300
+                                  : FontWeight.w400,
+                            ),
+                          ),
+                          Text(
+                            eta.hour >= 12 ? "pm" : "am",
+                            style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: darkMode
+                                  ? FontWeight.w300
+                                  : FontWeight.w300,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                  Text(
-                    formatUntilGoal(goal, spent),
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: darkMode ? FontWeight.w700 : FontWeight.w900,
-                      color: darkMode
-                          ? colorScheme.primary
-                          : colorScheme.primaryContainer,
-                    ),
+                  Row(
+                    spacing: 4,
+                    children: [
+                      Text(
+                        'Left:',
+                        style: TextStyle(
+                          fontWeight: darkMode
+                              ? FontWeight.w700
+                              : FontWeight.w900,
+                          fontSize: 13,
+                          color: darkMode
+                              ? colorScheme.primary
+                              : colorScheme.primaryContainer,
+                        ),
+                      ),
+                      Text(
+                        formatUntilGoal(goal, spent),
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: darkMode
+                              ? FontWeight.w700
+                              : FontWeight.w900,
+                          color: darkMode
+                              ? colorScheme.primary
+                              : colorScheme.primaryContainer,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -145,6 +198,17 @@ class _RoutineGoalDynamicLabelState extends State<RoutineGoalDynamicLabel> {
       spent: _spent,
       goal: widget.goal,
       running: widget.running,
+      lastStarted: widget.lastStarted,
     );
   }
+}
+
+String _format(DateTime t) {
+  var h = t.hour;
+  if (h == 0 || h == 12) {
+    h = 12;
+  } else {
+    h = h.remainder(12);
+  }
+  return '$h:${t.minute.toString().padLeft(2, "0")}';
 }

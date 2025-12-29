@@ -139,6 +139,7 @@ class Routine extends StatelessWidget {
                               spent: routine.spent,
                               goal: routine.goal,
                               running: routine.running,
+                              lastStarted: routine.lastStarted,
                             ),
                     ),
                   ],
