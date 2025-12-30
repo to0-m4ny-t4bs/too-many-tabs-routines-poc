@@ -6,6 +6,7 @@ import 'package:logging/logging.dart';
 import 'package:too_many_tabs/data/repositories/routines/routines_repository.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
 import 'package:too_many_tabs/notifications.dart';
+import 'package:too_many_tabs/ui/home/view_models/destination_bucket.dart';
 import 'package:too_many_tabs/ui/home/view_models/goal_update.dart';
 import 'package:too_many_tabs/utils/command.dart';
 import 'package:too_many_tabs/utils/notification_code.dart';
@@ -36,7 +37,7 @@ class HomeViewmodel extends ChangeNotifier {
   late Command1<void, int> startOrStopRoutine;
   late Command1<void, GoalUpdate> updateRoutineGoal;
   late Command1<void, String> addRoutine;
-  late Command1<void, (int, bool)> archiveOrBinRoutine;
+  late Command1<void, (int, DestinationBucket)> archiveOrBinRoutine;
   late Command1<void, int> trashRoutine;
 
   List<RoutineSummary> get routines => _routines;
@@ -75,9 +76,11 @@ class HomeViewmodel extends ChangeNotifier {
     }
   }
 
-  Future<Result<void>> _archiveOrBinRoutine((int, bool) archiveOrBin) async {
+  Future<Result<void>> _archiveOrBinRoutine(
+    (int, DestinationBucket) archiveOrBin,
+  ) async {
     final id = archiveOrBin.$1;
-    final bin = archiveOrBin.$2;
+    final destination = archiveOrBin.$2;
     try {
       final resultRunning = await _routinesRepository.getRunningRoutine();
       switch (resultRunning) {
@@ -105,7 +108,7 @@ class HomeViewmodel extends ChangeNotifier {
       }
 
       final Result<void> resultAction;
-      if (bin) {
+      if (destination == DestinationBucket.archives) {
         resultAction = await _routinesRepository.binRoutine(id);
       } else {
         resultAction = await _routinesRepository.archiveRoutine(id);
@@ -113,11 +116,13 @@ class HomeViewmodel extends ChangeNotifier {
       switch (resultAction) {
         case Error<void>():
           _log.warning(
-            '_archiveOrBinRoutine: action(bin=$bin) $id: ${resultAction.error}',
+            '_archiveOrBinRoutine: action(${destination.destination}) $id: ${resultAction.error}',
           );
           return resultAction;
         case Ok<void>():
-          _log.fine('_archiveOrBinRoutine: action(bin=$bin) $id');
+          _log.fine(
+            '_archiveOrBinRoutine: action(${destination.destination}) $id',
+          );
       }
 
       await _load();

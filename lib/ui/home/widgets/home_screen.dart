@@ -15,7 +15,7 @@ import 'package:too_many_tabs/ui/core/ui/routine_action.dart';
 import 'package:too_many_tabs/ui/home/view_models/home_viewmodel.dart';
 import 'package:too_many_tabs/ui/home/widgets/header_eta.dart';
 import 'package:too_many_tabs/ui/home/widgets/new_routine.dart';
-import 'package:too_many_tabs/ui/home/widgets/slide_up.dart';
+import 'package:too_many_tabs/ui/home/widgets/routines_list.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, required this.viewModel});
@@ -114,8 +114,6 @@ class HomeScreenState extends State<HomeScreen> {
     final darkMode = Theme.of(context).brightness == Brightness.dark;
 
     const double actionVerticalOffset = 40;
-    const double slideUpPanelMinHeight = 0;
-    const slideUpPanelMaxHeight = 340.0;
 
     return Scaffold(
       appBar: AppBar(
@@ -189,30 +187,38 @@ class HomeScreenState extends State<HomeScreen> {
                   child: child!,
                 );
               },
-              child: SlideUp(
-                minHeight: slideUpPanelMinHeight,
-                maxHeight: slideUpPanelMaxHeight,
-                pc: (pcfn) {
-                  pc = pcfn();
-                },
-                notifyPanelState: (open) {
-                  setState(() {
-                    isPanelOpen = open;
-                  });
-                },
-                tappedRoutine: tappedRoutine,
+              child: RoutinesList(
                 viewModel: widget.viewModel,
-                onRoutineTapped: (index) {
+                onTap: (index) {
                   setState(() {
                     tappedRoutine = widget.viewModel.routines[index];
                   });
                 },
-                onPanelClosed: () {
-                  setState(() {
-                    tappedRoutine = null;
-                  });
-                },
               ),
+              //child: SlideUp(
+              //  minHeight: slideUpPanelMinHeight,
+              //  maxHeight: slideUpPanelMaxHeight,
+              //  pc: (pcfn) {
+              //    pc = pcfn();
+              //  },
+              //  notifyPanelState: (open) {
+              //    setState(() {
+              //      isPanelOpen = open;
+              //    });
+              //  },
+              //  tappedRoutine: tappedRoutine,
+              //  viewModel: widget.viewModel,
+              //  onRoutineTapped: (index) {
+              //    setState(() {
+              //      tappedRoutine = widget.viewModel.routines[index];
+              //    });
+              //  },
+              //  onPanelClosed: () {
+              //    setState(() {
+              //      tappedRoutine = null;
+              //    });
+              //  },
+              //),
             ),
             showNewRoutinePopup
                 ? Center(
