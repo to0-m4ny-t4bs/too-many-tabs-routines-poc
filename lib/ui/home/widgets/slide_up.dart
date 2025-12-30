@@ -93,7 +93,6 @@ class _SlideUpState extends State<SlideUp> {
       body: RoutinesList(
         viewModel: widget.viewModel,
         onTap: widget.onRoutineTapped,
-        pc: pc,
       ),
     );
   }

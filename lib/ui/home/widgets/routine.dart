@@ -1,4 +1,3 @@
-import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
 import 'package:too_many_tabs/ui/core/ui/routine_action.dart';
@@ -9,13 +8,13 @@ class Routine extends StatelessWidget {
   const Routine({
     super.key,
     required this.routine,
-    required this.setGoal,
+    required this.onTap,
     required this.startStopSwitch,
     required this.archive,
   });
 
   final RoutineSummary routine;
-  final Function() setGoal, startStopSwitch, archive;
+  final Function() onTap, startStopSwitch, archive;
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +58,7 @@ class Routine extends StatelessWidget {
             InkWell(
               splashColor: colorScheme.primaryContainer,
               onLongPress: startStopSwitch,
-              onTap: setGoal,
+              onTap: onTap,
               child: Padding(
                 padding: EdgeInsets.only(
                   top: 2,
