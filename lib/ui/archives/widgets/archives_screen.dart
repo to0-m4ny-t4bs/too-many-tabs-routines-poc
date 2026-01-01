@@ -126,7 +126,7 @@ class _ArchivesScreenState extends State<ArchivesScreen> {
               ),
             ),
             Align(
-              alignment: Alignment.bottomLeft,
+              alignment: Alignment.bottomRight,
               child: FloatingAction(
                 onPressed: () {
                   context.go(Routes.bin);
@@ -139,7 +139,7 @@ class _ArchivesScreenState extends State<ArchivesScreen> {
               ),
             ),
             Align(
-              alignment: Alignment.bottomRight,
+              alignment: Alignment.bottomLeft,
               child: FloatingAction(
                 onPressed: () => context.go(Routes.home),
                 icon: Icons.home,
