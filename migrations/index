@@ -1,0 +1,9 @@
+20251128090519.sql create routines and routines_logs tables
+20251204104303.sql create log table (application logger: warnings etc.)
+20251204105119.sql add logger name to log table
+20251205144303.sql add archived column to routines table (classified backlog)
+20251209194042.sql add binned column to routines table (classified archive)
+20251216220121.sql create app settings (with overwrite setting)
+20251217071137.sql set default value of overwrite setting to false
+20251219081357.sql create goal_logs table (logging goals changes)
+20251228130208.sql create notes table
