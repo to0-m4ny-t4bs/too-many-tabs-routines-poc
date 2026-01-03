@@ -39,6 +39,7 @@ class AddNotePopupState extends State<AddNotePopup> {
         note: noteTextController.text,
         createdAt: DateTime.now(),
         routineId: widget.routineId,
+        dismissed: false,
       ),
     );
     widget.onClose();

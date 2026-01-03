@@ -37,6 +37,7 @@ class _NotesScreenState extends State<NotesScreen> {
       child: ListenableBuilder(
         listenable: widget.viewModel,
         builder: (context, child) {
+          final count = widget.viewModel.notes.length;
           return Stack(
             children: [
               Scaffold(
@@ -61,27 +62,17 @@ class _NotesScreenState extends State<NotesScreen> {
                   },
                   blendMode: BlendMode.dstIn,
                   child: ScrollablePositionedList.builder(
-                    itemCount: widget.viewModel.notes.length,
-                    padding: EdgeInsets.only(bottom: 140, top: 20),
+                    itemCount: count,
+                    padding: EdgeInsets.only(bottom: 140),
                     itemBuilder: (_, index) {
                       final note = widget.viewModel.notes[index];
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Note(text: note.text),
-                          Padding(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 8,
-                            ),
-                            child: index + 1 == widget.viewModel.notes.length
-                                ? SizedBox.shrink()
-                                : Container(
-                                    color: colorScheme.primary,
-                                    height: .2,
-                                  ),
-                          ),
-                        ],
+                      return Note(
+                        count: count,
+                        index: index,
+                        note: note,
+                        onDismiss: () {
+                          widget.viewModel.dismissNote.execute(note.id!);
+                        },
                       );
                     },
                   ),

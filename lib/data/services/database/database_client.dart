@@ -380,6 +380,7 @@ class DatabaseClient {
             'id': id as int,
             'created_at': createdAt3339 as String,
             'note': note as String?,
+            'dismissed': dismissed as int,
           }
           in rows) {
         final createdAt = DateTime.parse(createdAt3339);
@@ -390,6 +391,7 @@ class DatabaseClient {
             createdAt: createdAt,
             id: id,
             note: note,
+            dismissed: dismissed == 1,
           ),
         );
       }
@@ -406,6 +408,20 @@ class DatabaseClient {
         'created_at': note.createdAt.toIso8601String(),
         'note': note.text,
       });
+      return Result.ok(null);
+    } on Exception catch (e) {
+      return Result.error(e);
+    }
+  }
+
+  Future<Result<void>> updateNoteDismissed(int noteId, bool dismissed) async {
+    try {
+      await _database.update(
+        'notes',
+        {'dismissed': dismissed ? 1 : 0},
+        where: 'id = ?',
+        whereArgs: [noteId],
+      );
       return Result.ok(null);
     } on Exception catch (e) {
       return Result.error(e);

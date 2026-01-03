@@ -23,4 +23,5 @@ abstract class RoutinesRepository {
     required DateTime createdAt,
     required int routineId,
   });
+  Future<Result<void>> dismissNote(int noteId);
 }

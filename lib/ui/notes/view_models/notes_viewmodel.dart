@@ -12,6 +12,7 @@ class NotesViewmodel extends ChangeNotifier {
       _routineId = routineId {
     load = Command0(_load)..execute();
     addNote = Command1(_addNote);
+    dismissNote = Command1(_dismissNote);
   }
 
   final RoutinesRepository _repo;
@@ -20,6 +21,7 @@ class NotesViewmodel extends ChangeNotifier {
 
   late Command0 load;
   late Command1<void, NoteSummary> addNote;
+  late Command1<void, int> dismissNote;
 
   RoutineSummary? _routine;
   List<NoteSummary> _notes = [];
@@ -29,6 +31,7 @@ class NotesViewmodel extends ChangeNotifier {
 
   Future<Result> _load() async {
     try {
+      _notes = [];
       if (_routineId == null) {
         return Result.ok(null);
       }
@@ -52,7 +55,17 @@ class NotesViewmodel extends ChangeNotifier {
           _log.fine(
             '_load: getNotes: ${resultNotes.value.length} notes loaded',
           );
-          _notes = resultNotes.value;
+          List<NoteSummary> dismissed = [];
+          for (final note in resultNotes.value) {
+            if (note.dismissed) {
+              dismissed.add(note);
+            } else {
+              _notes.add(note);
+            }
+          }
+          _log.fine('_load: ${dismissed.length} dismissed notes');
+          _log.fine('_load: ${_notes.length} notes');
+          _notes.addAll(dismissed);
       }
       return resultRoutineSummary;
     } finally {
@@ -72,6 +85,23 @@ class NotesViewmodel extends ChangeNotifier {
           _log.fine('_addNote: $note');
         case Error<void>():
           _log.warning('_addNote $note: ${result.error}');
+      }
+      return result;
+    } finally {
+      notifyListeners();
+    }
+  }
+
+  Future<Result<void>> _dismissNote(int noteId) async {
+    try {
+      final result = await _repo.dismissNote(noteId);
+      switch (result) {
+        case Ok<void>():
+          _log.fine('_dismissNote: dismissed $noteId');
+          await _load();
+          break;
+        case Error<void>():
+          _log.warning('_dismissNote: ${result.error}');
       }
       return result;
     } finally {

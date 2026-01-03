@@ -368,7 +368,17 @@ class RoutinesRepositoryLocal implements RoutinesRepository {
     required int routineId,
   }) {
     return _databaseClient.addNote(
-      NoteSummary(routineId: routineId, createdAt: createdAt, note: note),
+      NoteSummary(
+        routineId: routineId,
+        createdAt: createdAt,
+        note: note,
+        dismissed: false,
+      ),
     );
+  }
+
+  @override
+  Future<Result<void>> dismissNote(int noteId) async {
+    return _databaseClient.updateNoteDismissed(noteId, true);
   }
 }
