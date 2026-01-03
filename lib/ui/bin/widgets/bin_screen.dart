@@ -6,7 +6,7 @@ import 'package:too_many_tabs/ui/bin/widgets/routine.dart';
 import 'package:too_many_tabs/ui/bin/view_models/bin_viewmodel.dart';
 import 'package:too_many_tabs/ui/core/loader.dart';
 import 'package:too_many_tabs/ui/core/ui/floating_action.dart';
-import 'package:too_many_tabs/ui/core/ui/routine_action.dart';
+import 'package:too_many_tabs/ui/core/ui/application_action.dart';
 
 class BinScreen extends StatefulWidget {
   const BinScreen({super.key, required this.viewModel});

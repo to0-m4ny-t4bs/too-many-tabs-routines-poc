@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:too_many_tabs/ui/core/ui/routine_action.dart';
+import 'package:too_many_tabs/ui/core/ui/application_action.dart';
 import 'package:too_many_tabs/ui/home/view_models/home_viewmodel.dart';
 
 class NewRoutine extends StatefulWidget {

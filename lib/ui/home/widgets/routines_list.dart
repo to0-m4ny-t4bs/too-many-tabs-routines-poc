@@ -15,11 +15,13 @@ class RoutinesList extends StatefulWidget {
     required this.homeModel,
     required this.notesModel,
     required this.onTap,
+    required this.onPopup,
   });
 
   final HomeViewmodel homeModel;
   final NotesViewmodel notesModel;
   final void Function(int) onTap;
+  final Function(bool) Function() onPopup;
 
   @override
   createState() => _RoutinesListState();
@@ -46,7 +48,9 @@ class _RoutinesListState extends State<RoutinesList> {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [Colors.black, Colors.black, Colors.transparent],
-                stops: [0.0, 0.9, 1.0], // Adjust stops for fade intensity
+                stops: popup != null
+                    ? [1, 1, 1]
+                    : [0.0, 0.9, 1.0], // Adjust stops for fade intensity
               ).createShader(bounds);
             },
             blendMode: BlendMode.dstIn,
@@ -102,11 +106,13 @@ class _RoutinesListState extends State<RoutinesList> {
                                 popup == null
                             ? RoutineMenu(
                                 onClose: () {
+                                  widget.onPopup()(false);
                                   setState(() {
                                     popup = null;
                                   });
                                 },
                                 popup: (item) {
+                                  widget.onPopup()(true);
                                   setState(() {
                                     popup = item;
                                   });
@@ -124,6 +130,7 @@ class _RoutinesListState extends State<RoutinesList> {
                   notesModel: widget.notesModel,
                   menu: popup,
                   close: () {
+                    widget.onPopup()(false);
                     setState(() {
                       popup = null;
                     });

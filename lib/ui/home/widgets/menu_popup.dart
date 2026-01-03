@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
+import 'package:too_many_tabs/ui/core/ui/application_action.dart';
+import 'package:too_many_tabs/ui/core/ui/floating_action.dart';
 import 'package:too_many_tabs/ui/home/view_models/home_viewmodel.dart';
 import 'package:too_many_tabs/ui/home/widgets/add_note_popup.dart';
 import 'package:too_many_tabs/ui/home/widgets/goal_popup.dart';
@@ -30,6 +32,8 @@ class MenuPopup extends StatelessWidget {
       return SizedBox.shrink();
     }
 
+    final List<_PopupAction> actions = [];
+
     final Widget? popup;
     switch (menu!) {
       case MenuItem.setGoal:
@@ -49,30 +53,52 @@ class MenuPopup extends StatelessWidget {
           routineId: routine!.id,
           viewModel: notesModel,
         );
+        popup as AddNotePopup;
+        actions.add(
+          _PopupAction(
+            alignment: Alignment.bottomRight,
+            action: popup.commitNote,
+            icon: Icons.check,
+            applicationAction: ApplicationAction.addNote,
+          ),
+        );
+        actions.add(
+          _PopupAction(
+            alignment: Alignment.bottomLeft,
+            action: popup.cancelNote,
+            icon: Icons.cancel,
+            applicationAction: ApplicationAction.cancelAddNote,
+          ),
+        );
         break;
     }
 
-    final popupContainer = Column(
-      mainAxisAlignment: MainAxisAlignment.center,
+    final popupContainer = Stack(
       children: [
-        Container(
-          decoration: BoxDecoration(
-            boxShadow: [
-              BoxShadow(
-                color: colorScheme.surfaceContainerHighest.withValues(
-                  alpha: 0.4,
-                ), // Shadow color with opacity
-                blurRadius: 15.0, // Controls the blurriness
-                spreadRadius: 2.0, // Controls how much the shadow spreads
-                offset: const Offset(
-                  0.0,
-                  0.0,
-                ), // Key for symmetry: centers the shadow
+        Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                boxShadow: [
+                  BoxShadow(
+                    color: colorScheme.surfaceContainerHighest.withValues(
+                      alpha: 0.4,
+                    ), // Shadow color with opacity
+                    blurRadius: 15.0, // Controls the blurriness
+                    spreadRadius: 2.0, // Controls how much the shadow spreads
+                    offset: const Offset(
+                      0.0,
+                      0.0,
+                    ), // Key for symmetry: centers the shadow
+                  ),
+                ],
               ),
-            ],
-          ),
-          child: popup,
+              child: popup,
+            ),
+          ],
         ),
+        ...actions,
       ],
     );
 
@@ -98,6 +124,34 @@ class MenuPopup extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _PopupAction extends StatelessWidget {
+  const _PopupAction({
+    required this.alignment,
+    required this.icon,
+    required this.action,
+    required this.applicationAction,
+  });
+  final Alignment alignment;
+  final IconData icon;
+  final ApplicationAction applicationAction;
+  final Function() action;
+  @override
+  build(BuildContext context) {
+    return Align(
+      alignment: alignment,
+      child: FloatingAction(
+        onPressed: action,
+        icon: icon,
+        colorComposition: colorCompositionFromAction(
+          context,
+          applicationAction,
+        ),
+        verticalOffset: 0,
       ),
     );
   }

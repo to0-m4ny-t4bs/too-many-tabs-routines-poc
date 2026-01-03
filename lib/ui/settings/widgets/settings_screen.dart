@@ -7,7 +7,7 @@ import 'package:too_many_tabs/domain/models/settings/special_goal.dart';
 import 'package:too_many_tabs/routing/routes.dart';
 import 'package:too_many_tabs/ui/core/loader.dart';
 import 'package:too_many_tabs/ui/core/ui/header_action.dart';
-import 'package:too_many_tabs/ui/core/ui/routine_action.dart';
+import 'package:too_many_tabs/ui/core/ui/application_action.dart';
 import 'package:too_many_tabs/ui/settings/widgets/goal_popup.dart';
 import 'package:too_many_tabs/ui/settings/view_models/settings_viewmodel.dart';
 import 'package:too_many_tabs/ui/settings/widgets/overwrite_database_switch.dart';

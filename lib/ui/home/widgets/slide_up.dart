@@ -94,6 +94,9 @@ class _SlideUpState extends State<SlideUp> {
         tappedRoutine: widget.tappedRoutine,
       ),
       body: RoutinesList(
+        onPopup: () {
+          return (_) {};
+        },
         notesModel: widget.notesModel,
         homeModel: widget.viewModel,
         onTap: widget.onRoutineTapped,

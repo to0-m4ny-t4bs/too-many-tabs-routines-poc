@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:too_many_tabs/ui/core/ui/routine_action.dart';
+import 'package:too_many_tabs/ui/core/ui/application_action.dart';
 
 class FloatingAction extends StatelessWidget {
   const FloatingAction({

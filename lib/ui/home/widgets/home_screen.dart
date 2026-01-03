@@ -11,7 +11,7 @@ import 'package:too_many_tabs/ui/core/loader.dart';
 import 'package:too_many_tabs/ui/core/ui/floating_action.dart';
 import 'package:too_many_tabs/ui/core/ui/header_action.dart';
 import 'package:too_many_tabs/ui/core/ui/label.dart';
-import 'package:too_many_tabs/ui/core/ui/routine_action.dart';
+import 'package:too_many_tabs/ui/core/ui/application_action.dart';
 import 'package:too_many_tabs/ui/home/view_models/home_viewmodel.dart';
 import 'package:too_many_tabs/ui/home/widgets/header_eta.dart';
 import 'package:too_many_tabs/ui/home/widgets/new_routine.dart';
@@ -33,7 +33,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class HomeScreenState extends State<HomeScreen> {
-  bool isPanelOpen = false;
+  bool isSomePopupShown = false;
   bool showNewRoutinePopup = false;
   RoutineSummary? tappedRoutine;
   PanelController? pc;
@@ -201,6 +201,13 @@ class HomeScreenState extends State<HomeScreen> {
                     tappedRoutine = widget.homeModel.routines[index];
                   });
                 },
+                onPopup: () {
+                  return (popup) {
+                    setState(() {
+                      isSomePopupShown = popup;
+                    });
+                  };
+                },
               ),
               //child: SlideUp(
               //  minHeight: slideUpPanelMinHeight,
@@ -250,7 +257,7 @@ class HomeScreenState extends State<HomeScreen> {
                     ),
                   )
                 : Container(),
-            isPanelOpen || showNewRoutinePopup
+            isSomePopupShown || showNewRoutinePopup
                 ? Container()
                 : Align(
                     alignment: Alignment.bottomRight,
@@ -266,7 +273,7 @@ class HomeScreenState extends State<HomeScreen> {
                       verticalOffset: actionVerticalOffset,
                     ),
                   ),
-            isPanelOpen || showNewRoutinePopup
+            isSomePopupShown || showNewRoutinePopup
                 ? Container()
                 : Align(
                     alignment: Alignment.bottomLeft,

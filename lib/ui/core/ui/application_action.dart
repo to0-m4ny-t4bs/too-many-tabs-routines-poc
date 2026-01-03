@@ -22,6 +22,7 @@ ColorComposition colorCompositionFromAction(
   switch (action) {
     case ApplicationAction.startRoutine:
     case ApplicationAction.toHome:
+    case ApplicationAction.addNote:
       foreground = darkMode ? colorScheme.primary : colorScheme.onPrimary;
       background = darkMode
           ? colorScheme.surfaceContainerLow
@@ -37,6 +38,7 @@ ColorComposition colorCompositionFromAction(
     case ApplicationAction.archiveRoutine:
     case ApplicationAction.toBacklog:
     case ApplicationAction.toArchive:
+    case ApplicationAction.cancelAddNote:
       foreground = darkMode
           ? colorScheme.onSurface
           : colorScheme.onInverseSurface;
@@ -112,7 +114,9 @@ enum ApplicationAction {
   toBacklog(8),
   toArchive(9),
   downloadBackup(10),
-  runningRoutine(11);
+  runningRoutine(11),
+  addNote(12),
+  cancelAddNote(13);
 
   const ApplicationAction(this.code);
 
