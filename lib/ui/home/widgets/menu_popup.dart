@@ -43,8 +43,24 @@ class MenuPopup extends StatelessWidget {
           routineGoal: routine!.goal,
           running: routine!.running,
           viewModel: homeModel,
-          onCancel: close,
-          onGoalSet: close,
+          close: close,
+        );
+        popup as GoalPopup;
+        actions.add(
+          _PopupAction(
+            alignment: Alignment.bottomRight,
+            action: popup.commit,
+            icon: Icons.check,
+            applicationAction: ApplicationAction.setGoal,
+          ),
+        );
+        actions.add(
+          _PopupAction(
+            alignment: Alignment.bottomLeft,
+            action: popup.close,
+            icon: Icons.close,
+            applicationAction: ApplicationAction.cancelSetGoal,
+          ),
         );
         break;
       case MenuItem.addNote:
@@ -66,7 +82,7 @@ class MenuPopup extends StatelessWidget {
           _PopupAction(
             alignment: Alignment.bottomLeft,
             action: popup.cancelNote,
-            icon: Icons.cancel,
+            icon: Icons.close,
             applicationAction: ApplicationAction.cancelAddNote,
           ),
         );

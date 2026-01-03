@@ -3,51 +3,72 @@ import 'package:too_many_tabs/ui/core/themes/dimens.dart';
 import 'package:too_many_tabs/ui/home/view_models/goal_update.dart';
 import 'package:too_many_tabs/ui/home/view_models/home_viewmodel.dart';
 
-class GoalPopup extends StatelessWidget {
-  const GoalPopup({
+class GoalPopup extends StatefulWidget {
+  GoalPopup({
     super.key,
     required this.routineName,
     required this.running,
     required this.viewModel,
     required this.routineID,
     required this.routineGoal,
-    required this.onCancel,
-    required this.onGoalSet,
+    required this.close,
   });
 
-  final void Function() onCancel, onGoalSet;
+  final void Function() close;
   final String routineName;
   final int routineID;
   final Duration routineGoal;
   final bool running;
   final HomeViewmodel viewModel;
 
+  final _stateKey = GlobalKey<GoalPopupState>();
+
+  void commit() {
+    _stateKey.currentState?.commit();
+  }
+
+  @override
+  get key => _stateKey;
+
+  @override
+  createState() => GoalPopupState();
+}
+
+class GoalPopupState extends State<GoalPopup> {
+  void commit() {
+    setter.commit();
+  }
+
+  late SetGoal setter;
+
+  @override
+  void initState() {
+    super.initState();
+    setter = SetGoal(
+      routineName: widget.routineName,
+      running: widget.running,
+      viewModel: widget.viewModel,
+      routineID: widget.routineID,
+      routineGoal: widget.routineGoal,
+      close: widget.close,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(30),
-      child: _SetGoal(
-        routineName: routineName,
-        running: running,
-        viewModel: viewModel,
-        routineID: routineID,
-        routineGoal: routineGoal,
-        onCancel: onCancel,
-        onGoalSet: onGoalSet,
-      ),
-    );
+    return ClipRRect(borderRadius: BorderRadius.circular(30), child: setter);
   }
 }
 
-class _SetGoal extends StatelessWidget {
-  const _SetGoal({
+class SetGoal extends StatefulWidget {
+  SetGoal({
+    super.key,
     required this.routineName,
     required this.running,
     required this.viewModel,
     required this.routineID,
     required this.routineGoal,
-    required this.onCancel,
-    required this.onGoalSet,
+    required this.close,
   });
 
   final String routineName;
@@ -55,7 +76,34 @@ class _SetGoal extends StatelessWidget {
   final Duration routineGoal;
   final bool running;
   final HomeViewmodel viewModel;
-  final void Function() onCancel, onGoalSet;
+  final void Function() close;
+
+  final _stateKey = GlobalKey<SetGoalState>();
+
+  void commit() => _stateKey.currentState?.commit();
+
+  @override
+  get key => _stateKey;
+
+  @override
+  createState() => SetGoalState();
+}
+
+class SetGoalState extends State<SetGoal> {
+  late GoalSelect select;
+
+  void commit() => select.commitGoal();
+
+  @override
+  void initState() {
+    super.initState();
+    select = GoalSelect(
+      viewModel: widget.viewModel,
+      routineID: widget.routineID,
+      routineGoal: widget.routineGoal,
+      close: widget.close,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -113,13 +161,7 @@ class _SetGoal extends StatelessWidget {
                 ),
               ],
             ),
-            _GoalSelect(
-              viewModel: viewModel,
-              routineID: routineID,
-              routineGoal: routineGoal,
-              onCancel: onCancel,
-              onGoalSet: onGoalSet,
-            ),
+            select,
           ],
         ),
       ),
@@ -159,22 +201,33 @@ class _GoalWheel extends StatelessWidget {
   }
 }
 
-class _GoalSelect extends StatefulWidget {
-  const _GoalSelect({
+class GoalSelect extends StatefulWidget {
+  GoalSelect({
+    super.key,
     required this.viewModel,
     required this.routineID,
     required this.routineGoal,
-    required this.onCancel,
-    required this.onGoalSet,
+    required this.close,
   });
+
+  final _stateKey = GlobalKey<GoalSelectState>();
+
+  void commitGoal() {
+    _stateKey.currentState?.commitGoal();
+  }
+
+  @override
+  GlobalKey<GoalSelectState> get key => _stateKey;
+
+  void cancel() => close();
 
   final int routineID;
   final Duration routineGoal;
   final HomeViewmodel viewModel;
-  final void Function() onCancel, onGoalSet;
+  final void Function() close;
 
   @override
-  createState() => _GoalSelectState();
+  createState() => GoalSelectState();
 }
 
 (int, int) indexGoal(Duration goal) {
@@ -186,7 +239,7 @@ class _GoalSelect extends StatefulWidget {
   return (0, 1); // 0h30m
 }
 
-class _GoalSelectState extends State<_GoalSelect> {
+class GoalSelectState extends State<GoalSelect> {
   int hoursIndex = 0, minutesIndex = 1; // default is 0h30min
 
   @override
@@ -196,6 +249,18 @@ class _GoalSelectState extends State<_GoalSelect> {
     hoursIndex = initialIndex.$1;
     minutesIndex = initialIndex.$2;
     super.initState();
+  }
+
+  void commitGoal() async {
+    await widget.viewModel.updateRoutineGoal.execute(
+      GoalUpdate(
+        routineID: widget.routineID,
+        goal: Duration(minutes: minutesIndex * 30, hours: hoursIndex),
+      ),
+    );
+    if (widget.viewModel.updateRoutineGoal.completed) {
+      widget.close();
+    }
   }
 
   @override
@@ -264,52 +329,6 @@ class _GoalSelectState extends State<_GoalSelect> {
                 Text('min', style: labelsTextStyle),
               ],
             ),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              ElevatedButton(
-                onPressed: widget.onCancel,
-                style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.all(20),
-                  backgroundColor: darkMode
-                      ? colorScheme.primary
-                      : colorScheme.surface,
-                  foregroundColor: darkMode
-                      ? colorScheme.onPrimary
-                      : colorScheme.onSurface,
-                ),
-                child: Text('Never mind'),
-              ),
-              ElevatedButton(
-                onPressed: minutesIndex == 0 && hoursIndex == 0
-                    ? null // set goal button is disabled unless duration > 0
-                    : () async {
-                        await widget.viewModel.updateRoutineGoal.execute(
-                          GoalUpdate(
-                            routineID: widget.routineID,
-                            goal: Duration(
-                              minutes: minutesIndex * 30,
-                              hours: hoursIndex,
-                            ),
-                          ),
-                        );
-                        if (widget.viewModel.updateRoutineGoal.completed) {
-                          widget.onGoalSet();
-                        }
-                      },
-                style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.all(20),
-                  backgroundColor: darkMode
-                      ? colorScheme.primaryContainer
-                      : colorScheme.primary,
-                  foregroundColor: darkMode
-                      ? colorScheme.onPrimaryContainer
-                      : colorScheme.onPrimary,
-                ),
-                child: const Text('Set Goal'),
-              ),
-            ],
           ),
         ],
       ),
