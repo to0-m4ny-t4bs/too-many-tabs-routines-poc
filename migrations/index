@@ -7,5 +7,6 @@
 20251217071137.sql set default value of overwrite setting to false
 20251219081357.sql create goal_logs table (logging goals changes)
 20251228130208.sql create notes table
-20260101091642.sql add routine_id to notes_table
+20260101091642.sql add routine_id to notes table
 20260102204229.sql add settings sit back, stoke, start and slow down goals
+20260103215930.sql add dismissed coloumn to notes table
