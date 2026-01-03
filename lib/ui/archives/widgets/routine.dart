@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
 import 'package:too_many_tabs/ui/core/ui/application_action.dart';
-import 'package:too_many_tabs/utils/format_duration.dart';
 import 'package:too_many_tabs/ui/core/colors.dart' as comp;
 
 class Routine extends StatelessWidget {
@@ -22,7 +22,7 @@ class Routine extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final darkMode = Theme.of(context).brightness == Brightness.dark;
     final background = index % 2 == (darkMode ? 0 : 1)
-        ? colorScheme.surfaceContainerHigh
+        ? colorScheme.primaryContainer.withValues(alpha: .1)
         : colorScheme.surfaceContainerLow;
     final foreground = index % 2 == (darkMode ? 0 : 1)
         ? colorScheme.onSurface
@@ -68,7 +68,7 @@ class Routine extends StatelessWidget {
       child: Container(
         color: background,
         child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -78,14 +78,45 @@ class Routine extends StatelessWidget {
                   style: TextStyle(color: foreground),
                 ),
               ),
-              Text(
-                formatUntilGoal(routine.goal, routine.spent),
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w200),
-              ),
+              routine.lastStarted == null
+                  ? const Text("new")
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        const Text(
+                          'last session',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w300,
+                          ),
+                        ),
+                        Text(_format(routine.lastStarted!)),
+                      ],
+                    ),
+              // Text(
+              //   formatUntilGoal(routine.goal, routine.spent),
+              //   style: TextStyle(fontSize: 14, fontWeight: FontWeight.w200),
+              // ),
             ],
           ),
         ),
       ),
     );
+  }
+
+  String _format(DateTime date) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final yesterday = today.subtract(Duration(days: 1));
+    if (date.isAfter(yesterday) && date.isBefore(today)) {
+      return 'yesterday';
+    }
+    if (date.isBefore(yesterday)) {
+      if (date.year < today.year) {
+        return DateFormat('EEE, MMM d, yyyy').format(date);
+      }
+      return DateFormat('EEE, MMM d').format(date);
+    }
+    return DateFormat.jm().format(date);
   }
 }

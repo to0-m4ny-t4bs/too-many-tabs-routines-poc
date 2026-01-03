@@ -25,6 +25,7 @@ class ArchivesViewmodel extends ChangeNotifier {
 
   Future<Result> _load() async {
     try {
+      _routines = [];
       final resultGet = await _routinesRepository.getRoutinesList(
         archived: true,
         binned: false,
@@ -37,7 +38,16 @@ class ArchivesViewmodel extends ChangeNotifier {
           _log.fine(
             '_load: getRoutinesList: ${resultGet.value.length} archived routines',
           );
-          _routines = resultGet.value;
+          final List<RoutineSummary> started = [];
+          for (final routine in resultGet.value) {
+            if (routine.lastStarted != null) {
+              started.add(routine);
+            } else {
+              _routines.add(routine);
+            }
+          }
+          started.sort((a, b) => b.lastStarted!.compareTo(a.lastStarted!));
+          _routines.addAll(started);
       }
 
       return Result.ok(null);

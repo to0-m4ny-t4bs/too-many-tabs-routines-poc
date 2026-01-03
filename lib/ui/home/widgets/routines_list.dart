@@ -84,6 +84,11 @@ class _RoutinesListState extends State<RoutinesList> {
                                 tappedRoutine = null;
                               }
                             });
+                            itemScrollController.scrollTo(
+                              index: index,
+                              curve: Curves.easeIn,
+                              duration: Duration(milliseconds: 200),
+                            );
                           },
                           startStopSwitch: () async {
                             await widget.homeModel.startOrStopRoutine.execute(

@@ -1,6 +1,7 @@
 import 'package:fading_edge_scrollview/fading_edge_scrollview.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:too_many_tabs/routing/routes.dart';
 import 'package:too_many_tabs/ui/archives/view_models/archives_viewmodel.dart';
 import 'package:too_many_tabs/ui/archives/widgets/routine.dart';
@@ -37,6 +38,9 @@ class _ArchivesScreenState extends State<ArchivesScreen> {
     _listener.dispose();
     super.dispose();
   }
+
+  final itemScrollController = ItemScrollController();
+  final scrollOffsetController = ScrollOffsetController();
 
   @override
   build(BuildContext context) {
@@ -84,42 +88,46 @@ class _ArchivesScreenState extends State<ArchivesScreen> {
               child: ListenableBuilder(
                 listenable: widget.viewModel,
                 builder: (context, _) {
-                  return FadingEdgeScrollView.fromScrollView(
-                    gradientFractionOnEnd: 0.8,
-                    gradientFractionOnStart: 0,
-                    child: CustomScrollView(
-                      controller: _controller,
-                      slivers: [
-                        SliverSafeArea(
-                          minimum: EdgeInsets.only(bottom: 120),
-                          sliver: SliverList.builder(
-                            itemCount: widget.viewModel.routines.length,
-                            itemBuilder: (_, index) {
-                              return Routine(
-                                index: index,
-                                key: ValueKey(
-                                  widget.viewModel.routines[index].id,
-                                ),
-                                routine: widget.viewModel.routines[index],
-                                restore: () async {
-                                  await widget.viewModel.restore.execute(
-                                    widget.viewModel.routines[index].id,
-                                  );
-                                  if (context.mounted) {
-                                    context.go(Routes.home);
-                                  }
-                                },
-                                trash: () async {
-                                  await widget.viewModel.bin.execute(
-                                    widget.viewModel.routines[index].id,
-                                  );
-                                  await widget.viewModel.load.execute();
-                                },
-                              );
-                            },
-                          ),
-                        ),
-                      ],
+                  return ShaderMask(
+                    shaderCallback: (bounds) {
+                      return LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.black,
+                          Colors.black,
+                          Colors.transparent,
+                        ],
+                        stops: [0, .8, 1],
+                      ).createShader(bounds);
+                    },
+                    blendMode: BlendMode.dstIn,
+                    child: ScrollablePositionedList.builder(
+                      itemScrollController: itemScrollController,
+                      scrollOffsetController: scrollOffsetController,
+                      itemCount: widget.viewModel.routines.length,
+                      padding: EdgeInsets.only(bottom: 120),
+                      itemBuilder: (_, index) {
+                        return Routine(
+                          index: index,
+                          key: ValueKey(widget.viewModel.routines[index].id),
+                          routine: widget.viewModel.routines[index],
+                          restore: () async {
+                            await widget.viewModel.restore.execute(
+                              widget.viewModel.routines[index].id,
+                            );
+                            if (context.mounted) {
+                              context.go(Routes.home);
+                            }
+                          },
+                          trash: () async {
+                            await widget.viewModel.bin.execute(
+                              widget.viewModel.routines[index].id,
+                            );
+                            await widget.viewModel.load.execute();
+                          },
+                        );
+                      },
                     ),
                   );
                 },

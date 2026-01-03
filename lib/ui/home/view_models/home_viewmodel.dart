@@ -56,15 +56,28 @@ class HomeViewmodel extends ChangeNotifier {
           return result;
         case Ok<List<RoutineSummary>>():
           _routines = result.value;
+          final List<RoutineSummary> sortedRoutines = [];
+          final List<RoutineSummary> completedRoutines = [];
+          final List<RoutineSummary> remainingRoutines = [];
           for (final routine in _routines) {
+            final completed = routine.goal <= routine.spent;
             if (routine.running) {
               _pinnedRoutine = routine;
+              sortedRoutines.add(routine);
               _log.fine(
                 'running routine (pinned routine) id=${_pinnedRoutine!.id} "${_pinnedRoutine!.name}"',
               );
-              break;
+              continue;
+            }
+            if (completed) {
+              completedRoutines.add(routine);
+            } else {
+              remainingRoutines.add(routine);
             }
           }
+          sortedRoutines.addAll(remainingRoutines);
+          sortedRoutines.addAll(completedRoutines);
+          _routines = sortedRoutines;
           _log.fine('Loaded routines');
       }
 

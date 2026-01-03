@@ -21,7 +21,7 @@ class Routine extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final darkMode = Theme.of(context).brightness == Brightness.dark;
     final background = index % 2 == (darkMode ? 0 : 1)
-        ? colorScheme.surfaceContainerHigh
+        ? colorScheme.primaryContainer.withValues(alpha: .1)
         : colorScheme.surfaceContainerLow;
     final foreground = index % 2 == (darkMode ? 0 : 1)
         ? colorScheme.onSurface
@@ -46,7 +46,7 @@ class Routine extends StatelessWidget {
       child: Container(
         color: background,
         child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
