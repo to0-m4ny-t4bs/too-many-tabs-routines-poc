@@ -17,7 +17,6 @@ import 'package:too_many_tabs/ui/home/widgets/header_eta.dart';
 import 'package:too_many_tabs/ui/home/widgets/new_routine.dart';
 import 'package:too_many_tabs/ui/home/widgets/routines_list.dart';
 import 'package:too_many_tabs/ui/notes/view_models/notes_viewmodel.dart';
-import 'package:too_many_tabs/utils/notification_code.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
