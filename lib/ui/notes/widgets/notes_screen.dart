@@ -6,6 +6,7 @@ import 'package:too_many_tabs/ui/core/loader.dart';
 import 'package:too_many_tabs/ui/core/ui/floating_action.dart';
 import 'package:too_many_tabs/ui/core/ui/application_action.dart';
 import 'package:too_many_tabs/ui/notes/view_models/notes_viewmodel.dart';
+import 'package:too_many_tabs/ui/notes/widgets/note.dart';
 
 class NotesScreen extends StatefulWidget {
   const NotesScreen({super.key, required this.viewModel});
@@ -49,13 +50,41 @@ class _NotesScreenState extends State<NotesScreen> {
                         : widget.viewModel.routine!.name,
                   ),
                 ),
-                body: ScrollablePositionedList.builder(
-                  itemCount: widget.viewModel.notes.length,
-                  padding: EdgeInsets.only(),
-                  itemBuilder: (_, index) {
-                    final note = widget.viewModel.notes[index];
-                    return Text(note.text);
+                body: ShaderMask(
+                  shaderCallback: (bounds) {
+                    return LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      stops: [0, .8, 1],
+                      colors: [Colors.black, Colors.black, Colors.transparent],
+                    ).createShader(bounds);
                   },
+                  blendMode: BlendMode.dstIn,
+                  child: ScrollablePositionedList.builder(
+                    itemCount: widget.viewModel.notes.length,
+                    padding: EdgeInsets.only(bottom: 140, top: 20),
+                    itemBuilder: (_, index) {
+                      final note = widget.viewModel.notes[index];
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Note(text: note.text),
+                          Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 8,
+                            ),
+                            child: index + 1 == widget.viewModel.notes.length
+                                ? SizedBox.shrink()
+                                : Container(
+                                    color: colorScheme.primary,
+                                    height: .2,
+                                  ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
                 ),
               ),
               Align(
@@ -67,6 +96,7 @@ class _NotesScreenState extends State<NotesScreen> {
                     context,
                     ApplicationAction.toHome,
                   ),
+                  verticalOffset: 40,
                 ),
               ),
             ],
