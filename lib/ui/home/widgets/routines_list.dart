@@ -28,12 +28,25 @@ class RoutinesList extends StatefulWidget {
 }
 
 class _RoutinesListState extends State<RoutinesList> {
-  RoutineSummary? tappedRoutine;
+  _TappedRoutine? tappedRoutine;
   MenuItem? popup;
   late int runningIndex;
 
   final itemScrollController = ItemScrollController();
   final scrollOffsetController = ScrollOffsetController();
+  final itemPositionListener = ItemPositionsListener.create();
+
+  bool _isVisible(int index) {
+    return itemPositionListener.itemPositions.value.any((item) {
+      final leading = item.itemLeadingEdge;
+      final trailing = item.itemTrailingEdge;
+      if (index == item.index) {
+        // debugPrint('index=${item.index} leading=$leading trailing=$trailing');
+        return leading >= 0 && trailing <= 1;
+      }
+      return false;
+    });
+  }
 
   @override
   build(BuildContext context) {
@@ -57,80 +70,83 @@ class _RoutinesListState extends State<RoutinesList> {
             child: Stack(
               children: [
                 ScrollablePositionedList.builder(
-                  padding: EdgeInsets.only(bottom: 50),
+                  padding: EdgeInsets.only(bottom: 50, top: 20),
                   itemCount: widget.homeModel.routines.length,
                   itemScrollController: itemScrollController,
                   scrollOffsetController: scrollOffsetController,
+                  itemPositionsListener: itemPositionListener,
                   itemBuilder: (_, index) {
-                    final routineId = widget.homeModel.routines[index].id;
                     final routine = widget.homeModel.routines[index];
                     if (routine.running) {
                       runningIndex = index;
                     }
-                    return Column(
-                      children: [
-                        Routine(
-                          key: ValueKey(routineId),
-                          routine: routine,
-                          onTap: () {
-                            widget.onTap(index);
-                            setState(() {
-                              if (tappedRoutine == null ||
-                                  (tappedRoutine != null &&
-                                      tappedRoutine!.id != routineId)) {
-                                tappedRoutine =
-                                    widget.homeModel.routines[index];
-                              } else {
-                                tappedRoutine = null;
-                              }
-                            });
-                            itemScrollController.scrollTo(
+                    return _ListItem(
+                      index: index,
+                      routine: routine,
+                      onTap: (index) {
+                        setState(() {
+                          if (tappedRoutine == null ||
+                              (tappedRoutine != null &&
+                                  tappedRoutine!.routineSummary.id !=
+                                      routine.id)) {
+                            tappedRoutine = _TappedRoutine(
+                              routineSummary: routine,
                               index: index,
-                              curve: Curves.easeIn,
-                              duration: Duration(milliseconds: 200),
                             );
-                          },
-                          startStopSwitch: () async {
-                            await widget.homeModel.startOrStopRoutine.execute(
-                              routineId,
-                            );
-                            return widget
-                                .homeModel
-                                .startOrStopRoutine
-                                .completed;
-                          },
-                          archive: () async {
-                            await widget.homeModel.archiveOrBinRoutine.execute((
-                              routineId,
-                              DestinationBucket.backlog,
-                            ));
-                          },
-                        ),
-                        tappedRoutine != null &&
-                                tappedRoutine!.id == routineId &&
-                                popup == null
-                            ? RoutineMenu(
-                                onClose: () {
-                                  widget.onPopup()(false);
-                                  setState(() {
-                                    popup = null;
-                                  });
-                                },
-                                popup: (item) {
-                                  widget.onPopup()(true);
-                                  setState(() {
-                                    popup = item;
-                                  });
-                                },
-                                routine: tappedRoutine!,
-                              )
-                            : SizedBox.shrink(),
-                      ],
+                          } else {
+                            tappedRoutine = null;
+                          }
+                        });
+                      },
+                      onStartOrStop: () async {
+                        await widget.homeModel.startOrStopRoutine.execute(
+                          routine.id,
+                        );
+                      },
+                      onMoveToBacklog: () async {
+                        await widget.homeModel.archiveOrBinRoutine.execute((
+                          routine.id,
+                          DestinationBucket.backlog,
+                        ));
+                      },
+                      menu: () {
+                        if (tappedRoutine != null &&
+                            tappedRoutine!.routineSummary.id == routine.id &&
+                            popup == null) {
+                          return RoutineMenu(
+                            onClose: () {
+                              widget.onPopup()(false);
+                              setState(() {
+                                popup = null;
+                              });
+                            },
+                            popup: (item) {
+                              widget.onPopup()(true);
+                              setState(() {
+                                popup = item;
+                              });
+                            },
+                            routine: tappedRoutine!.routineSummary,
+                          );
+                        }
+                        return SizedBox.shrink();
+                      },
+                      onRedraw: (index) {
+                        if (tappedRoutine != null &&
+                            tappedRoutine!.index == index &&
+                            !_isVisible(index)) {
+                          itemScrollController.scrollTo(
+                            index: index,
+                            curve: Curves.linear,
+                            duration: Duration(milliseconds: 200),
+                          );
+                        }
+                      },
                     );
                   },
                 ),
                 MenuPopup(
-                  routine: tappedRoutine,
+                  routine: tappedRoutine?.routineSummary,
                   homeModel: widget.homeModel,
                   notesModel: widget.notesModel,
                   menu: popup,
@@ -158,4 +174,67 @@ class _RoutinesListState extends State<RoutinesList> {
       ),
     );
   }
+}
+
+class _ListItem extends StatefulWidget {
+  const _ListItem({
+    required this.index,
+    required this.routine,
+    required this.onTap,
+    required this.onStartOrStop,
+    required this.onMoveToBacklog,
+    required this.onRedraw,
+    required this.menu,
+  });
+  final int index;
+  final RoutineSummary routine;
+  final void Function(int) onTap;
+  final void Function() onStartOrStop, onMoveToBacklog;
+  final Widget Function() menu;
+  final Function(int) onRedraw;
+
+  @override
+  createState() => _ListItemState();
+}
+
+class _ListItemState extends State<_ListItem> {
+  final _key = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      widget.onRedraw(widget.index);
+    });
+  }
+
+  @override
+  build(BuildContext context) {
+    return Column(
+      key: _key,
+      children: [
+        Routine(
+          key: ValueKey(widget.routine.id),
+          routine: widget.routine,
+          onTap: () {
+            widget.onTap(widget.index);
+          },
+          startStopSwitch: widget.onStartOrStop,
+          archive: widget.onMoveToBacklog,
+        ),
+        widget.menu(),
+      ],
+    );
+  }
+}
+
+class _TappedRoutine {
+  final RoutineSummary routineSummary;
+  final int index;
+
+  const _TappedRoutine({required this.routineSummary, required this.index});
+
+  @override
+  String toString() =>
+      '_TappedRoutine(routineSummary: $routineSummary, index: $index)';
 }
