@@ -41,4 +41,15 @@ class RoutineSummary {
       ')',
     ].join('');
   }
+
+  RoutineSummary from({bool? setRunning, DateTime? setLastStarted}) {
+    return RoutineSummary(
+      id: id,
+      name: name,
+      goal: goal.inMinutes ~/ 30,
+      spent: spent,
+      running: setRunning ?? running,
+      lastStarted: setLastStarted ?? lastStarted,
+    );
+  }
 }

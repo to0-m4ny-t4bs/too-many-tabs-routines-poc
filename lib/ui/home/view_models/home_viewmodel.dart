@@ -55,29 +55,7 @@ class HomeViewmodel extends ChangeNotifier {
           _log.warning('Failed to load routines', result.error);
           return result;
         case Ok<List<RoutineSummary>>():
-          _routines = result.value;
-          final List<RoutineSummary> sortedRoutines = [];
-          final List<RoutineSummary> completedRoutines = [];
-          final List<RoutineSummary> remainingRoutines = [];
-          for (final routine in _routines) {
-            final completed = routine.goal <= routine.spent;
-            if (routine.running) {
-              _pinnedRoutine = routine;
-              sortedRoutines.add(routine);
-              _log.fine(
-                'running routine (pinned routine) id=${_pinnedRoutine!.id} "${_pinnedRoutine!.name}"',
-              );
-              continue;
-            }
-            if (completed) {
-              completedRoutines.add(routine);
-            } else {
-              remainingRoutines.add(routine);
-            }
-          }
-          sortedRoutines.addAll(remainingRoutines);
-          sortedRoutines.addAll(completedRoutines);
-          _routines = sortedRoutines;
+          _routines = _listRoutines(result.value);
           _log.fine('Loaded routines');
       }
 
@@ -184,8 +162,6 @@ class HomeViewmodel extends ChangeNotifier {
       ]) {
         await _notificationsPlugin.cancel(code.code);
       }
-      _log.fine('_updateNotifications: all goal notifications were cancelled');
-      _log.fine('_updateNotifications: pinnedRoutine: $_pinnedRoutine');
       if (_pinnedRoutine == null) return;
       final left = _pinnedRoutine!.goal - _pinnedRoutine!.spent;
       final untilHalfWay = Duration(minutes: left.inMinutes ~/ 2);
@@ -199,13 +175,12 @@ class HomeViewmodel extends ChangeNotifier {
           untilHalfWay.inMinutes >= 20 && halfWay.isAfter(DateTime.now());
       if (scheduleHalfWay) {
         try {
-          final sched = await scheduleNotification(
+          await scheduleNotification(
             title: _pinnedRoutine!.name,
             body: "Halfway there! ${untilHalfWay.inMinutes}min left.",
             id: NotificationCode.routineHalfGoal,
             schedule: halfWay,
           );
-          _log.fine('_updateNotifications: routineHalfGoal: $sched');
         } catch (e) {
           _log.warning('_updateNotifications: schedule routineHalfGoal: $e');
         }
@@ -213,14 +188,11 @@ class HomeViewmodel extends ChangeNotifier {
       if (!scheduleHalfWay && left.inMinutes >= 30) {
         try {
           final t = roundedLastStarted.add(Duration(minutes: 10));
-          final sched = await scheduleNotification(
+          await scheduleNotification(
             title: _pinnedRoutine!.name,
             body: "Settle in! ${left.inMinutes - 10}m left.",
             id: NotificationCode.routineSettleCheck,
             schedule: t,
-          );
-          _log.fine(
-            '_updateNotifications: routineSettleCheck: $sched (${left.inMinutes - 10})',
           );
         } catch (e) {
           _log.warning('_updateNotifications: routineSettleCheck: $e');
@@ -233,13 +205,12 @@ class HomeViewmodel extends ChangeNotifier {
       final scheduleDone = done.isAfter(DateTime.now());
       if (scheduleDone) {
         try {
-          final sched = await scheduleNotification(
+          await scheduleNotification(
             title: _pinnedRoutine!.name,
             body: 'We\'re Done!',
             id: NotificationCode.routineCompletedGoal,
             schedule: done,
           );
-          _log.fine('_updateNotifications: routineCompletedGoal: $sched');
         } catch (e) {
           _log.warning(
             '_updateNotifications: schedule routineCompletedGoal: $e',
@@ -253,13 +224,12 @@ class HomeViewmodel extends ChangeNotifier {
       final scheduleGoalIn10 = goalIn10.isAfter(DateTime.now());
       if (scheduleGoalIn10) {
         try {
-          final sched = await scheduleNotification(
+          await scheduleNotification(
             title: _pinnedRoutine!.name,
             body: 'Time to wrap up! 10 mins left.',
             id: NotificationCode.routineGoalIn10Minutes,
             schedule: goalIn10,
           );
-          _log.fine('_updateNotifications: routineGoalIn10Minutes: $sched');
         } catch (e) {
           _log.warning(
             '_updateNotifications: schedule routineGoalIn10Minutes: $e',
@@ -362,12 +332,14 @@ class HomeViewmodel extends ChangeNotifier {
 
       final Result<void> resultSwitch;
       final String action;
+      bool started = false;
       if (resultRoutine.value.running) {
         resultSwitch = await _routinesRepository.logStop(id, DateTime.now());
         action = 'Stopped';
       } else {
         resultSwitch = await _routinesRepository.logStart(id, DateTime.now());
         action = 'Started';
+        started = true;
       }
 
       switch (resultSwitch) {
@@ -375,28 +347,50 @@ class HomeViewmodel extends ChangeNotifier {
           _log.warning('$action failed routine[id=$id]', resultSwitch.error);
           return resultSwitch;
         case Ok<void>():
-          _log.fine('$action routine [id=$id]');
+          _log.fine('$action routine $id');
       }
 
-      final resultRefresh = await _routinesRepository.getRoutinesList(
-        archived: false,
-        binned: false,
-      );
-      switch (resultRefresh) {
-        case Error<List<RoutineSummary>>():
-          _log.warning('Failed to load routines', resultRefresh.error);
-          return resultRefresh;
-        case Ok<List<RoutineSummary>>():
-          _routines = resultRefresh.value;
-          _log.fine('Loaded routines');
-          for (final routine in resultRefresh.value) {
-            _log.fine('_startOrStopRoutine: resultRefresh: $routine');
+      _routines = _listRoutines(
+        _routines.map((routine) {
+          if (routine.id == id) {
+            return routine.from(
+              setRunning: started,
+              setLastStarted: started ? DateTime.now() : null,
+            );
           }
-      }
+          if (routine.running) {
+            return routine.from(setRunning: false);
+          }
+          return routine;
+        }).toList(),
+      );
 
       return await _updateRunningRoutine();
     } finally {
       notifyListeners();
     }
+  }
+
+  List<RoutineSummary> _listRoutines(List<RoutineSummary> routines) {
+    final List<RoutineSummary> sortedRoutines = [];
+    final List<RoutineSummary> completedRoutines = [];
+    final List<RoutineSummary> remainingRoutines = [];
+    for (final routine in routines) {
+      final completed = routine.goal <= routine.spent;
+      if (routine.running) {
+        _pinnedRoutine = routine;
+        sortedRoutines.add(routine);
+        _log.fine('running $_pinnedRoutine');
+        continue;
+      }
+      if (completed) {
+        completedRoutines.add(routine);
+      } else {
+        remainingRoutines.add(routine);
+      }
+    }
+    sortedRoutines.addAll(remainingRoutines);
+    sortedRoutines.addAll(completedRoutines);
+    return sortedRoutines;
   }
 }

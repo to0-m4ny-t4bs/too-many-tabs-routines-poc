@@ -32,8 +32,10 @@ class _HeaderRoutinesDynamicGoalLabelState
     for (final routine in widget.routines) {
       if (routine.running) {
         inPause = false;
-        final spent =
-            DateTime.now().difference(routine.lastStarted!) + routine.spent;
+        var spent = routine.spent;
+        if (routine.lastStarted != null) {
+          spent += DateTime.now().difference(routine.lastStarted!);
+        }
         final left = routine.goal - spent;
         if (left > Duration()) {
           goal += left;
