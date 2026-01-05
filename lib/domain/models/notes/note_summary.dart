@@ -37,8 +37,7 @@ class NoteSummary {
 
     for (final part in parts) {
       final uri = Uri.tryParse(part);
-      final isUri = uri != null && uri.isAbsolute;
-      result.add((part, isUri));
+      result.add((part, uri != null && uri.scheme == 'https'));
     }
 
     return result;

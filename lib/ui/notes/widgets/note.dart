@@ -34,13 +34,20 @@ class Note extends StatelessWidget {
                   padding: EdgeInsets.only(right: 20),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [Icon(Icons.layers_clear)],
                   ),
                 ),
                 onDismissed: (_) async {
                   onDismiss();
                 },
-                child: _Note(note: note, top: index == 0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _Note(note: note, top: index == 0),
+                    ),
+                  ],
+                ),
               ),
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
