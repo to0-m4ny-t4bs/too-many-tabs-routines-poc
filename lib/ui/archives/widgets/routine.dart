@@ -91,7 +91,10 @@ class Routine extends StatelessWidget {
                             fontWeight: FontWeight.w300,
                           ),
                         ),
-                        Text(timeago.format(routine.lastStarted!)),
+                        Text(
+                          timeago.format(routine.lastStarted!),
+                          style: TextStyle(fontSize: 14),
+                        ),
                       ],
                     ),
               // Text(
