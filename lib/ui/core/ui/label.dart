@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
 
 enum Label {
-  homeScreenNumberOfPlannedRoutines(0),
-  homeScreenDayETA(1),
-  homeScreenRoutinesPlannedToday(2),
-  homeScreenGoalTotal(3);
-
-  const Label(this.code);
-
-  final int code;
+  homeScreenNumberOfPlannedRoutines(),
+  homeScreenDayETA(),
+  homeScreenRoutinesPlannedToday(),
+  homeScreenGoalTotal(),
+  homeScreenSpecialGoalTitle(),
 }
 
 Color labelColor(BuildContext context, Label label) {
@@ -18,6 +15,7 @@ Color labelColor(BuildContext context, Label label) {
     case Label.homeScreenNumberOfPlannedRoutines:
     case Label.homeScreenRoutinesPlannedToday:
     case Label.homeScreenDayETA:
+    case Label.homeScreenSpecialGoalTitle:
       return darkMode
           ? colorScheme.onPrimaryContainer
           : colorScheme.onPrimaryFixed;

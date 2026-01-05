@@ -147,27 +147,9 @@ class HomeScreenState extends State<HomeScreen> {
                   Row(
                     spacing: 6,
                     children: [
-                      Text(
-                        '${widget.homeModel.routines.length}',
-                        style: TextStyle(
-                          color: labelColor(
-                            context,
-                            Label.homeScreenNumberOfPlannedRoutines,
-                          ),
-                          fontWeight: FontWeight.w400,
-                          fontSize: 20,
-                        ),
-                      ),
-                      Text(
-                        'routine${widget.homeModel.routines.length <= 1 ? '' : 's'} planned today',
-                        style: TextStyle(
-                          color: labelColor(
-                            context,
-                            Label.homeScreenRoutinesPlannedToday,
-                          ),
-                          fontWeight: FontWeight.w300,
-                          fontSize: 16,
-                        ),
+                      ..._buildAppTitle(
+                        context,
+                        widget.homeModel.runningSpecialSession,
                       ),
                     ],
                   ),
@@ -363,6 +345,74 @@ class HomeScreenState extends State<HomeScreen> {
         ),
       ),
     );
+  }
+
+  List<Widget> _buildAppTitle(BuildContext context, SpecialGoal? session) {
+    if (session == null) {
+      return [
+        Text(
+          '${widget.homeModel.routines.length}',
+          style: TextStyle(
+            color: labelColor(context, Label.homeScreenNumberOfPlannedRoutines),
+            fontWeight: FontWeight.w400,
+            fontSize: 20,
+          ),
+        ),
+        Text(
+          'routine${widget.homeModel.routines.length <= 1 ? '' : 's'} planned today',
+          style: TextStyle(
+            color: labelColor(context, Label.homeScreenRoutinesPlannedToday),
+            fontWeight: FontWeight.w300,
+            fontSize: 16,
+          ),
+        ),
+      ];
+    }
+
+    return [
+          (
+            SpecialGoal.startSlow,
+            'Prepare yourself for today 💪',
+            Symbols.wb_twilight_rounded,
+          ),
+          (
+            SpecialGoal.sitBack,
+            'It\'s ok to have a break',
+            Symbols.beach_access_rounded,
+          ),
+          (SpecialGoal.stoke, 'Time to refill', Symbols.fork_spoon_rounded),
+          (
+            SpecialGoal.slowDown,
+            'It\'s almost bed time',
+            Symbols.airline_seat_flat_rounded,
+          ),
+        ]
+        .map((item) {
+          final goal = item.$1;
+          final label = item.$2;
+          final icon = item.$3;
+
+          return (
+            [
+              Icon(
+                icon,
+                color: labelColor(context, Label.homeScreenSpecialGoalTitle),
+              ),
+              Text(
+                label,
+                style: TextStyle(
+                  color: labelColor(context, Label.homeScreenSpecialGoalTitle),
+                  fontWeight: FontWeight.w300,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+            goal,
+          );
+        })
+        .where((item) => item.$2 == session)
+        .toList()[0]
+        .$1;
   }
 
   Widget _buildExpandableFab(bool newDay) {
