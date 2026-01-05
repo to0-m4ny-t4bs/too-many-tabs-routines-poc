@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'package:url_launcher/url_launcher.dart' as ul;
 import 'package:flutter/material.dart';
 import 'package:too_many_tabs/domain/models/notes/note_summary.dart';
 
@@ -25,7 +26,7 @@ class Note extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         note.dismissed
-            ? _Note(text: note.text, dismissed: true, top: index == 0)
+            ? _Note(note: note, top: index == 0)
             : Dismissible(
                 key: ValueKey(uid),
                 direction: DismissDirection.endToStart,
@@ -39,7 +40,7 @@ class Note extends StatelessWidget {
                 onDismissed: (_) async {
                   onDismiss();
                 },
-                child: _Note(text: note.text, top: index == 0),
+                child: _Note(note: note, top: index == 0),
               ),
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
@@ -52,11 +53,10 @@ class Note extends StatelessWidget {
   }
 }
 
+@immutable
 class _Note extends StatelessWidget {
-  const _Note({required this.text, bool? dismissed, required this.top})
-    : _dismissed = dismissed ?? false;
-  final String text;
-  final bool _dismissed;
+  const _Note({required this.note, required this.top});
+  final NoteSummary note;
   final bool top;
   @override
   build(BuildContext context) {
@@ -64,9 +64,35 @@ class _Note extends StatelessWidget {
       padding: top
           ? EdgeInsets.only(top: 20, bottom: 5, left: 30, right: 30)
           : EdgeInsets.symmetric(vertical: 5, horizontal: 30),
-      child: Text(
-        text,
-        style: _dismissed ? TextStyle(fontWeight: FontWeight.w200) : null,
+      child: Wrap(
+        spacing: 4,
+        children: [
+          ...note.fragments.map(
+            (fragment) => GestureDetector(
+              onTap: fragment.$2
+                  ? () async {
+                      final uri = Uri.parse(fragment.$1);
+                      if (!await ul.launchUrl(uri)) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('unable to launch url "$uri"'),
+                            ),
+                          );
+                        }
+                      }
+                    }
+                  : null,
+              child: Text(
+                fragment.$1,
+                style: TextStyle(
+                  fontWeight: note.dismissed ? FontWeight.w200 : null,
+                  color: fragment.$2 ? Theme.of(context).primaryColor : null,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

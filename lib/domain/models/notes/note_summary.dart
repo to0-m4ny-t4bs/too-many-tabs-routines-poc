@@ -23,6 +23,27 @@ class NoteSummary {
   String get text => _note;
   bool get dismissed => _dismissed;
 
+  /// Returns a list of pairs where the first element is the original text
+  /// fragment and the second element indicates whether that fragment could be
+  /// parsed as a valid absolute [Uri].
+  ///
+  /// The note is first split by whitespace. Each fragment is then tested with
+  /// `Uri.tryParse`. A fragment is considered a URI only when the parsing
+  /// succeeds **and** the resulting `Uri` is absolute (i.e. it has a scheme).
+  List<(String fragment, bool isUri)> get fragments {
+    // Split on any amount of whitespace, discarding empty parts.
+    final parts = _note.split(RegExp(r'\s+')).where((s) => s.isNotEmpty);
+    final result = <(String, bool)>[];
+
+    for (final part in parts) {
+      final uri = Uri.tryParse(part);
+      final isUri = uri != null && uri.isAbsolute;
+      result.add((part, isUri));
+    }
+
+    return result;
+  }
+
   @override
   String toString() {
     return [
