@@ -115,11 +115,16 @@ class _RoutinesListState extends State<RoutinesList> {
                             popup == null) {
                           return RoutineMenu(
                             homeViewmodel: widget.homeModel,
-                            onClose: () {
+                            close: (scroll) {
                               widget.onPopup()(false);
                               setState(() {
                                 popup = null;
+                                tappedRoutine = null;
                               });
+                              itemScrollController.scrollTo(
+                                index: 0,
+                                duration: Duration(milliseconds: 250),
+                              );
                             },
                             popup: (item) {
                               widget.onPopup()(true);
@@ -155,6 +160,7 @@ class _RoutinesListState extends State<RoutinesList> {
                     widget.onPopup()(false);
                     setState(() {
                       popup = null;
+                      tappedRoutine = null;
                     });
                   },
                 ),
