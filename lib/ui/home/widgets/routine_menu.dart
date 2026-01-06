@@ -8,12 +8,12 @@ import 'package:too_many_tabs/ui/home/widgets/menu_item.dart';
 class RoutineMenu extends StatelessWidget {
   const RoutineMenu({
     super.key,
-    required this.onClose,
+    required this.close,
     required this.routine,
     required this.popup,
     required this.homeViewmodel,
   });
-  final void Function() onClose;
+  final void Function(int) close;
   final void Function(MenuItem) popup;
   final RoutineSummary routine;
   final HomeViewmodel homeViewmodel;
@@ -28,12 +28,15 @@ class RoutineMenu extends StatelessWidget {
           ListenableBuilder(
             listenable: homeViewmodel,
             builder: (context, _) {
-              final running = homeViewmodel.pinnedRoutine != null;
+              final running =
+                  homeViewmodel.pinnedRoutine != null &&
+                  routine.id == homeViewmodel.pinnedRoutine!.id;
               return _MenuItem(
                 icon: running ? Icons.stop_circle : Icons.play_circle,
                 label: running ? "Stop" : "Start",
                 onTap: () {
                   homeViewmodel.startOrStopRoutine.execute(routine.id);
+                  close(0);
                 },
               );
             },
