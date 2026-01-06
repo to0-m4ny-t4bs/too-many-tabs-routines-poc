@@ -1,3 +1,4 @@
+import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -6,6 +7,7 @@ import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:too_many_tabs/data/repositories/routines/special_session_duration.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
 import 'package:too_many_tabs/domain/models/settings/special_goal.dart';
+import 'package:too_many_tabs/domain/models/settings/special_goals.dart';
 import 'package:too_many_tabs/routing/routes.dart';
 import 'package:too_many_tabs/ui/core/loader.dart';
 import 'package:too_many_tabs/ui/core/ui/floating_action.dart';
@@ -85,18 +87,40 @@ class HomeScreenState extends State<HomeScreen> {
           child: ListenableBuilder(
             listenable: widget.homeModel,
             builder: (context, _) {
+              final specialSession = widget.homeModel.runningSpecialSession;
               return Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Row(
-                    spacing: 6,
-                    children: [
-                      ..._buildAppTitle(
-                        context,
-                        widget.homeModel.runningSpecialSession,
-                      ),
-                    ],
+                  ListenableBuilder(
+                    listenable: widget.settingsModel.load,
+                    builder: (context, child) {
+                      return Loader(
+                        error: widget.settingsModel.load.error,
+                        running: widget.settingsModel.load.running,
+                        onError: widget.settingsModel.load.execute,
+                        child: child!,
+                      );
+                    },
+                    child: ListenableBuilder(
+                      listenable: widget.settingsModel,
+                      builder: (context, _) {
+                        return Row(
+                          spacing: 6,
+                          children: [
+                            ..._buildAppTitle(
+                              context: context,
+                              session: specialSession,
+                              settings:
+                                  widget.settingsModel.settings.specialGoals,
+                              state: widget
+                                  .homeModel
+                                  .specialSessionAllStatum[specialSession],
+                            ),
+                          ],
+                        );
+                      },
+                    ),
                   ),
                   ListenableBuilder(
                     listenable: widget.settingsModel.load,
@@ -292,7 +316,12 @@ class HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  List<Widget> _buildAppTitle(BuildContext context, SpecialGoal? session) {
+  List<Widget> _buildAppTitle({
+    required BuildContext context,
+    required SpecialGoal? session,
+    required SpecialGoals settings,
+    required SpecialSessionDuration? state,
+  }) {
     if (session == null) {
       return [
         Text(
@@ -314,10 +343,30 @@ class HomeScreenState extends State<HomeScreen> {
       ];
     }
 
+    final Duration goal;
+    switch (session) {
+      case SpecialGoal.startSlow:
+        goal = settings.startSlow;
+        break;
+      case SpecialGoal.slowDown:
+        goal = settings.slowDown;
+        break;
+      case SpecialGoal.sitBack:
+        goal = settings.sitBack;
+        break;
+      case SpecialGoal.stoke:
+        goal = settings.stoke;
+        break;
+    }
+    final diff = goal - state!.duration;
+    debugPrint('eta left $goal $state!.duration $state $diff');
+    final left = diff < Duration() ? Duration() : diff;
+    final eta = state.current!.add(left);
+
     return [
           (
             SpecialGoal.startSlow,
-            'Prepare yourself for today 💪',
+            'Slow start, strong finish',
             Symbols.wb_twilight_rounded,
           ),
           (
@@ -349,6 +398,14 @@ class HomeScreenState extends State<HomeScreen> {
                   color: labelColor(context, Label.homeScreenSpecialGoalTitle),
                   fontWeight: FontWeight.w300,
                   fontSize: 14,
+                ),
+              ),
+              Text(
+                '[${DateFormat.jm().format(eta)}]',
+                style: TextStyle(
+                  color: labelColor(context, Label.homeScreenSpecialGoalTitle),
+                  fontWeight: FontWeight.w300,
+                  fontSize: 12,
                 ),
               ),
             ],

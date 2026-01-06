@@ -322,6 +322,7 @@ class HomeViewmodel extends ChangeNotifier {
           _routines = _listRoutines(resultList.value);
       }
 
+      await _updateSpecialSessionStatus(DateTime.now());
       return await _updateRunningRoutine();
     } finally {
       notifyListeners();
@@ -353,6 +354,10 @@ class HomeViewmodel extends ChangeNotifier {
 
   SpecialSessionDuration? _specialSessionStatus;
   SpecialSessionDuration? get specialSessionStatus => _specialSessionStatus;
+
+  final Map<SpecialGoal, SpecialSessionDuration> _specialSessionAllStatum = {};
+  Map<SpecialGoal, SpecialSessionDuration> get specialSessionAllStatum =>
+      _specialSessionAllStatum;
 
   Future<Result<void>> _updateSpecialSessionStatus(DateTime day) async {
     try {
@@ -393,6 +398,24 @@ class HomeViewmodel extends ChangeNotifier {
           _log.fine('_updateSpecialSessionStatus: ${result.value}');
           _specialSessionStatus = result.value;
       }
+
+      if (resultCurrent.value != null) {
+        final result = await _routinesRepository
+            .currentSpecialSessionDuration();
+        switch (result) {
+          case Error<SpecialSessionDuration?>():
+            _log.warning(
+              '_updateSpecialSessionStatus: currentSpecialSessionDuration: ${result.error}',
+            );
+            return Result.error(result.error);
+          case Ok<SpecialSessionDuration?>():
+            _log.fine(
+              '_updateSpecialSessionStatus: currentSpecialSessionDuration: ${result.value}',
+            );
+            _specialSessionAllStatum[resultCurrent.value!.goal] = result.value!;
+        }
+      }
+
       return Result.ok(null);
     } finally {
       notifyListeners();
