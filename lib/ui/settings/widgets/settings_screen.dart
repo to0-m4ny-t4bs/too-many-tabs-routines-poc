@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:path/path.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:too_many_tabs/domain/models/settings/special_goal.dart';
 import 'package:too_many_tabs/routing/routes.dart';
@@ -13,6 +12,7 @@ import 'package:too_many_tabs/ui/settings/view_models/settings_viewmodel.dart';
 import 'package:too_many_tabs/ui/settings/widgets/overwrite_database_switch.dart';
 import 'package:too_many_tabs/ui/settings/widgets/goal_setting.dart';
 import 'package:too_many_tabs/utils/result.dart';
+import 'package:share_plus/share_plus.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key, required this.viewModel});

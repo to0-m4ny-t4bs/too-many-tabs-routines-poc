@@ -1,7 +1,7 @@
 import 'dart:math' as math;
-import 'package:url_launcher/url_launcher.dart' as ul;
 import 'package:flutter/material.dart';
 import 'package:too_many_tabs/domain/models/notes/note_summary.dart';
+import 'package:url_launcher_platform_interface/url_launcher_platform_interface.dart';
 
 class Note extends StatelessWidget {
   const Note({
@@ -78,16 +78,7 @@ class _Note extends StatelessWidget {
             (fragment) => GestureDetector(
               onTap: fragment.$2
                   ? () async {
-                      final uri = Uri.parse(fragment.$1);
-                      if (!await ul.launchUrl(uri)) {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('unable to launch url "$uri"'),
-                            ),
-                          );
-                        }
-                      }
+                      await _launchInBrowser(context, fragment.$1);
                     }
                   : null,
               child: Text(
@@ -102,5 +93,26 @@ class _Note extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _launchInBrowser(BuildContext context, String url) async {
+    final UrlLauncherPlatform launcher = UrlLauncherPlatform.instance;
+    if (await launcher.canLaunch(url)) {
+      await launcher.launch(
+        url,
+        useSafariVC: false,
+        useWebView: false,
+        enableJavaScript: false,
+        enableDomStorage: false,
+        universalLinksOnly: false,
+        headers: {},
+      );
+    } else {
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('unable to load $url')));
+      }
+    }
   }
 }
