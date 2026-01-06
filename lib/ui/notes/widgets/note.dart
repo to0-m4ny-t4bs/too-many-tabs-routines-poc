@@ -67,6 +67,7 @@ class _Note extends StatelessWidget {
   final bool top;
   @override
   build(BuildContext context) {
+    final theme = Theme.of(context);
     return Padding(
       padding: top
           ? EdgeInsets.only(top: 20, bottom: 5, left: 30, right: 30)
@@ -85,7 +86,7 @@ class _Note extends StatelessWidget {
                 fragment.$1,
                 style: TextStyle(
                   fontWeight: note.dismissed ? FontWeight.w200 : null,
-                  color: fragment.$2 ? Theme.of(context).primaryColor : null,
+                  color: fragment.$2 ? theme.colorScheme.primary : null,
                 ),
               ),
             ),
