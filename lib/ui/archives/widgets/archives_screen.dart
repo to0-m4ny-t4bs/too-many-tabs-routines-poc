@@ -120,7 +120,6 @@ class _ArchivesScreenState extends State<ArchivesScreen> {
                             await widget.viewModel.bin.execute(
                               widget.viewModel.routines[index].id,
                             );
-                            await widget.viewModel.load.execute();
                           },
                         );
                       },
