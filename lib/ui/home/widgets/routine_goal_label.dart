@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:too_many_tabs/ui/home/view_models/routine_state.dart';
 import 'package:too_many_tabs/ui/home/widgets/routine_spent_dynamic_label.dart';
 import 'package:too_many_tabs/utils/format_duration.dart';
@@ -47,21 +48,26 @@ class RoutineGoalLabel extends StatelessWidget {
           offset: Offset((state == RoutineState.overRun) ? 4 : 0, 0),
           child: Icon(
             Icons.emoji_events,
-            color: colorScheme.primary.withAlpha((.6 * 255).round()),
-          ),
-        );
-      case RoutineState.inProgress:
+            color: colorScheme.primary.withValues(alpha: .6),
+          ), // Icon emoji_events
+        ); // Transform.translate
       case RoutineState.notStarted:
-        return Container(
-          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(5),
-            color: (darkMode
-                ? colorScheme.primaryContainer
-                : colorScheme.secondaryContainer),
-          ),
-          child: Text(formatUntilGoal(goal, spent), style: textStyle),
-        );
+      case RoutineState.inProgress:
+        return goal == Duration.zero
+            ? Icon(
+                Symbols.cruelty_free,
+                color: colorScheme.primary.withValues(alpha: .6),
+              ) // Icon cruelty_free
+            : Container(
+                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(5),
+                  color: (darkMode
+                      ? colorScheme.primaryContainer
+                      : colorScheme.secondaryContainer),
+                ), // BoxDecoration
+                child: Text(formatUntilGoal(goal, spent), style: textStyle),
+              ); // Container
     }
   }
 
