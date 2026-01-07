@@ -115,9 +115,6 @@ class _ArchivesScreenState extends State<ArchivesScreen> {
                             await widget.viewModel.restore.execute(
                               widget.viewModel.routines[index].id,
                             );
-                            if (context.mounted) {
-                              context.go(Routes.home);
-                            }
                           },
                           trash: () async {
                             await widget.viewModel.bin.execute(
