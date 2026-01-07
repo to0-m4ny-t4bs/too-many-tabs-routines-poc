@@ -42,17 +42,17 @@ class RoutineMenu extends StatelessWidget {
             },
           ),
           _MenuItem(
-            icon: Icons.star,
-            label: "Set goal",
-            onTap: () {
-              popup(MenuItem.setGoal);
-            },
-          ),
-          _MenuItem(
             icon: Icons.note_add,
             label: "Add note",
             onTap: () {
               popup(MenuItem.addNote);
+            },
+          ),
+          _MenuItem(
+            icon: Icons.star,
+            label: "Set goal",
+            onTap: () {
+              popup(MenuItem.setGoal);
             },
           ),
           _MenuItem(
