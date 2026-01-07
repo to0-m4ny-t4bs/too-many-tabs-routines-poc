@@ -5,8 +5,8 @@ class RoutineSummary {
     required int id,
     required String name,
     required int goal, // expected daily duration as multiple of 30m
-    required Duration spent,
     required bool running,
+    required Duration spent,
     required DateTime? lastStarted, // last time the routine was started
     required RoutineBin bin,
   }) : _id = id,
@@ -31,6 +31,13 @@ class RoutineSummary {
   bool get running => _running;
   DateTime? get lastStarted => _lastStarted;
   RoutineBin get bin => _bin;
+
+  Duration spentAt(DateTime at) {
+    if (_lastStarted == null || !_running) {
+      return _spent;
+    }
+    return DateTime.now().difference(_lastStarted) + _spent;
+  }
 
   @override
   String toString() {

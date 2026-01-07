@@ -12,6 +12,7 @@ import 'package:too_many_tabs/domain/models/settings/special_goal.dart';
 import 'package:too_many_tabs/domain/models/settings/special_goal_session.dart';
 import 'package:too_many_tabs/ui/home/view_models/destination_bucket.dart';
 import 'package:too_many_tabs/ui/home/view_models/goal_update.dart';
+import 'package:too_many_tabs/ui/home/view_models/routine_state.dart';
 import 'package:too_many_tabs/utils/command.dart';
 import 'package:too_many_tabs/utils/result.dart';
 
@@ -32,7 +33,7 @@ class HomeViewmodel extends ChangeNotifier {
 
   final RoutinesRepository _routinesRepository;
   final _log = Logger('HomeViewmodel');
-  List<RoutineSummary> _routines = [];
+  List<(RoutineSummary, RoutineState)> _routines = [];
   RoutineSummary? _pinnedRoutine;
   int? _lastCreatedRoutineID;
 
@@ -45,7 +46,11 @@ class HomeViewmodel extends ChangeNotifier {
   late Command1<void, DateTime> updateSpecialSessionStatus;
   late Command1<void, SpecialGoal> toggleSpecialSession;
 
-  List<RoutineSummary> get routines => _routines;
+  List<(RoutineSummary, RoutineState)> get routines => _routines;
+
+  RoutineSummary routineAtIndex(int index) =>
+      routines.map((rs) => rs.$1).toList()[index];
+
   RoutineSummary? get pinnedRoutine => _pinnedRoutine;
   int? get lastCreatedRoutineID => _lastCreatedRoutineID;
 
@@ -220,11 +225,12 @@ class HomeViewmodel extends ChangeNotifier {
               _pinnedRoutine = resultRunning.value;
               _log.fine('_updateRoutineGoal: _pinnedRoutine: $_pinnedRoutine');
           }
-          _routines = _routines.map((routine) {
+          _routines = _routines.map((rs) {
+            final routine = rs.$1, state = rs.$2;
             if (routine.id == request.routineID) {
-              return resultGetRoutine.value;
+              return (resultGetRoutine.value, state);
             }
-            return routine;
+            return (routine, state);
           }).toList();
       }
 
@@ -329,27 +335,59 @@ class HomeViewmodel extends ChangeNotifier {
     }
   }
 
-  List<RoutineSummary> _listRoutines(List<RoutineSummary> routines) {
-    final List<RoutineSummary> sortedRoutines = [];
-    final List<RoutineSummary> completedRoutines = [];
-    final List<RoutineSummary> remainingRoutines = [];
+  List<(RoutineSummary, RoutineState)> _listRoutines(
+    List<RoutineSummary> routines,
+  ) {
+    final List<(RoutineSummary, RoutineState)> sorted = [];
+    final List<RoutineSummary> completed = [];
+    final List<RoutineSummary> fresh = [];
+    final List<RoutineSummary> inProgress = [];
+    final now = DateTime.now();
     for (final routine in routines) {
-      final completed = routine.goal <= routine.spent;
-      if (routine.running) {
-        _pinnedRoutine = routine;
-        sortedRoutines.add(routine);
-        _log.fine('running $_pinnedRoutine');
-        continue;
-      }
-      if (completed) {
-        completedRoutines.add(routine);
+      final RoutineState state;
+      if (routine.spentAt(now) <= Duration(minutes: 5)) {
+        state = RoutineState.notStarted;
+      } else if (routine.goal <= routine.spentAt(now)) {
+        if (routine.running) {
+          state = RoutineState.overRun;
+        } else {
+          state = RoutineState.goalReached;
+        }
+      } else if (routine.running) {
+        state = RoutineState.isRunning;
       } else {
-        remainingRoutines.add(routine);
+        state = RoutineState.inProgress;
+      }
+      switch (state) {
+        case RoutineState.isRunning:
+        case RoutineState.overRun:
+          _pinnedRoutine = routine;
+          sorted.add((routine, state));
+          _log.fine('$state $_pinnedRoutine');
+          break;
+        case RoutineState.goalReached:
+          completed.add(routine);
+        case RoutineState.inProgress:
+          inProgress.add(routine);
+        case RoutineState.notStarted:
+          fresh.add(routine);
+          break;
       }
     }
-    sortedRoutines.addAll(remainingRoutines);
-    sortedRoutines.addAll(completedRoutines);
-    return sortedRoutines;
+
+    inProgress.sort((a, b) => b.spentAt(now).compareTo(a.spentAt(now)));
+    sorted.addAll(inProgress.map((r) => (r, RoutineState.inProgress)));
+
+    completed.sort((a, b) => b.lastStarted!.compareTo(a.lastStarted!));
+    sorted.addAll(completed.map((r) => (r, RoutineState.goalReached)));
+
+    sorted.addAll(fresh.map((r) => (r, RoutineState.notStarted)));
+
+    for (final rs in sorted) {
+      debugPrint('${rs.$2} ${rs.$1}');
+    }
+
+    return sorted;
   }
 
   SpecialSessionDuration? _specialSessionStatus;

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
 import 'package:too_many_tabs/ui/core/ui/application_action.dart';
+import 'package:too_many_tabs/ui/home/view_models/routine_state.dart';
 import 'package:too_many_tabs/ui/home/widgets/routine_goal_label.dart';
 import 'package:too_many_tabs/ui/home/widgets/routine_spent_dynamic_label.dart';
 
@@ -8,12 +9,14 @@ class Routine extends StatelessWidget {
   const Routine({
     super.key,
     required this.routine,
+    required this.state,
     required this.onTap,
     required this.startStopSwitch,
     required this.archive,
   });
 
   final RoutineSummary routine;
+  final RoutineState state;
   final Function() onTap, startStopSwitch, archive;
 
   @override
@@ -136,13 +139,13 @@ class Routine extends StatelessWidget {
                               key: ValueKey(routine.id),
                               spent: routine.spent,
                               goal: routine.goal,
-                              running: routine.running,
+                              state: state,
                               lastStarted: routine.lastStarted!,
                             )
                           : RoutineGoalLabel(
                               spent: routine.spent,
                               goal: routine.goal,
-                              running: routine.running,
+                              state: state,
                               lastStarted: routine.lastStarted,
                             ),
                     ),

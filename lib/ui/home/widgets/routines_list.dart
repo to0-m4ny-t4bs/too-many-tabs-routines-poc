@@ -3,6 +3,7 @@ import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
 import 'package:too_many_tabs/ui/home/view_models/destination_bucket.dart';
 import 'package:too_many_tabs/ui/home/view_models/home_viewmodel.dart';
+import 'package:too_many_tabs/ui/home/view_models/routine_state.dart';
 import 'package:too_many_tabs/ui/home/widgets/menu_item.dart';
 import 'package:too_many_tabs/ui/home/widgets/menu_popup.dart';
 import 'package:too_many_tabs/ui/home/widgets/routine.dart';
@@ -76,13 +77,16 @@ class _RoutinesListState extends State<RoutinesList> {
                   scrollOffsetController: scrollOffsetController,
                   itemPositionsListener: itemPositionListener,
                   itemBuilder: (_, index) {
-                    final routine = widget.homeModel.routines[index];
+                    final rs = widget.homeModel.routines[index];
+                    final routine = rs.$1;
+                    final state = rs.$2;
                     if (routine.running) {
                       runningIndex = index;
                     }
                     return _ListItem(
                       index: index,
                       routine: routine,
+                      state: state,
                       onTap: (index) {
                         setState(() {
                           if (tappedRoutine == null ||
@@ -187,6 +191,7 @@ class _ListItem extends StatefulWidget {
   const _ListItem({
     required this.index,
     required this.routine,
+    required this.state,
     required this.onTap,
     required this.onStartOrStop,
     required this.onMoveToBacklog,
@@ -195,6 +200,7 @@ class _ListItem extends StatefulWidget {
   });
   final int index;
   final RoutineSummary routine;
+  final RoutineState state;
   final void Function(int) onTap;
   final void Function() onStartOrStop, onMoveToBacklog;
   final Widget Function() menu;
@@ -223,6 +229,7 @@ class _ListItemState extends State<_ListItem> {
         Routine(
           key: ValueKey(widget.routine.id),
           routine: widget.routine,
+          state: widget.state,
           onTap: () {
             widget.onTap(widget.index);
           },
