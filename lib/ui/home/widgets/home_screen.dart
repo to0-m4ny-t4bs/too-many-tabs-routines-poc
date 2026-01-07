@@ -361,7 +361,7 @@ class HomeScreenState extends State<HomeScreen> {
     final diff = goal - state!.duration;
     debugPrint('eta left $goal $state!.duration $state $diff');
     final left = diff < Duration() ? Duration() : diff;
-    final eta = state.current!.add(left);
+    final eta = DateTime.now().add(left);
 
     return [
           (
