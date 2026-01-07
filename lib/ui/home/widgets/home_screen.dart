@@ -201,30 +201,6 @@ class HomeScreenState extends State<HomeScreen> {
                   };
                 },
               ),
-              //child: SlideUp(
-              //  minHeight: slideUpPanelMinHeight,
-              //  maxHeight: slideUpPanelMaxHeight,
-              //  pc: (pcfn) {
-              //    pc = pcfn();
-              //  },
-              //  notifyPanelState: (open) {
-              //    setState(() {
-              //      isPanelOpen = open;
-              //    });
-              //  },
-              //  tappedRoutine: tappedRoutine,
-              //  viewModel: widget.viewModel,
-              //  onRoutineTapped: (index) {
-              //    setState(() {
-              //      tappedRoutine = widget.viewModel.routines[index];
-              //    });
-              //  },
-              //  onPanelClosed: () {
-              //    setState(() {
-              //      tappedRoutine = null;
-              //    });
-              //  },
-              //),
             ),
             showNewRoutinePopup
                 ? ShaderMask(
@@ -283,20 +259,6 @@ class HomeScreenState extends State<HomeScreen> {
                     builder: (context, _) =>
                         _buildExpandableFab(widget.homeModel.newDay),
                   ),
-            // Align(
-            //     alignment: Alignment.bottomRight,
-            //     child: FloatingAction(
-            //       icon: Icons.add,
-            //       onPressed: () => setState(() {
-            //         showNewRoutinePopup = true;
-            //       }),
-            //       colorComposition: colorCompositionFromAction(
-            //         context,
-            //         ApplicationAction.addRoutine,
-            //       ),
-            //       verticalOffset: actionVerticalOffset,
-            //     ),
-            //   ),
             isSomePopupShown || showNewRoutinePopup
                 ? Container()
                 : Align(
