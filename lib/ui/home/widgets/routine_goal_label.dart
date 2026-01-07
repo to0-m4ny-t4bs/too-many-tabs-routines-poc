@@ -1,138 +1,141 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:too_many_tabs/ui/home/view_models/routine_state.dart';
 import 'package:too_many_tabs/ui/home/widgets/routine_spent_dynamic_label.dart';
 import 'package:too_many_tabs/utils/format_duration.dart';
 
 class RoutineGoalLabel extends StatelessWidget {
   const RoutineGoalLabel({
     super.key,
+    required this.state,
     required this.spent,
     required this.goal,
-    required this.running,
     required this.lastStarted,
   });
   final Duration spent, goal;
-  final bool running;
+  final RoutineState state;
   final DateTime? lastStarted;
 
   @override
   build(BuildContext context) {
-    final done = spent.inMinutes >= goal.inMinutes;
     final DateTime eta = DateTime.now().add(goal - spent);
 
     final colorScheme = Theme.of(context).colorScheme;
     final darkMode = Theme.of(context).brightness == Brightness.dark;
 
     final textStyle = TextStyle(
-      color: running
+      color: state == RoutineState.isRunning
           ? colorScheme.onPrimary
           : (darkMode ? colorScheme.onPrimaryContainer : colorScheme.primary),
       fontSize: Theme.of(context).textTheme.labelMedium!.fontSize,
       fontWeight: darkMode
-          ? (running ? FontWeight.w500 : FontWeight.w400)
-          : (running ? FontWeight.w600 : FontWeight.w300),
+          ? ((state == RoutineState.isRunning)
+                ? FontWeight.w500
+                : FontWeight.w400)
+          : ((state == RoutineState.isRunning)
+                ? FontWeight.w600
+                : FontWeight.w300),
     );
 
-    return (running && !done)
-        ? Container(
-            padding: EdgeInsets.symmetric(vertical: 5),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
-                  spacing: 3,
-                  children: [
-                    Text(
-                      'ETA:',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: darkMode
-                            ? FontWeight.w200
-                            : FontWeight.w400,
-                      ),
-                    ),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.baseline,
-                      textBaseline: TextBaseline.alphabetic,
-                      spacing: 1,
-                      children: [
-                        Text(
-                          _format(eta),
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: darkMode
-                                ? FontWeight.w300
-                                : FontWeight.w400,
-                          ),
-                        ),
-                        Text(
-                          eta.hour >= 12 ? "pm" : "am",
-                          style: TextStyle(
-                            fontSize: 9,
-                            fontWeight: darkMode
-                                ? FontWeight.w300
-                                : FontWeight.w300,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+    switch (state) {
+      case RoutineState.isRunning:
+        return _buildIsRunningLabel(context, eta);
+      case RoutineState.goalReached:
+      case RoutineState.overRun:
+        return Transform.translate(
+          offset: Offset((state == RoutineState.overRun) ? 4 : 0, 0),
+          child: Icon(
+            Icons.emoji_events,
+            color: colorScheme.primary.withAlpha((.6 * 255).round()),
+          ),
+        );
+      case RoutineState.inProgress:
+      case RoutineState.notStarted:
+        return Container(
+          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(5),
+            color: (darkMode
+                ? colorScheme.primaryContainer
+                : colorScheme.secondaryContainer),
+          ),
+          child: Text(formatUntilGoal(goal, spent), style: textStyle),
+        );
+    }
+  }
+
+  Widget _buildIsRunningLabel(BuildContext context, DateTime eta) {
+    final theme = Theme.of(context);
+    final darkMode = theme.brightness == Brightness.dark;
+    return Container(
+      padding: EdgeInsets.symmetric(vertical: 5),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            spacing: 3,
+            children: [
+              Text(
+                'ETA:',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: darkMode ? FontWeight.w200 : FontWeight.w400,
                 ),
-                Row(
-                  spacing: 4,
-                  children: [
-                    Text(
-                      'Left:',
-                      style: TextStyle(
-                        fontWeight: darkMode
-                            ? FontWeight.w700
-                            : FontWeight.w900,
-                        fontSize: 13,
-                        color: darkMode
-                            ? colorScheme.primary
-                            : colorScheme.primaryContainer,
-                      ),
+              ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                spacing: 1,
+                children: [
+                  Text(
+                    _format(eta),
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: darkMode ? FontWeight.w300 : FontWeight.w400,
                     ),
-                    Text(
-                      formatUntilGoal(goal, spent),
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: darkMode
-                            ? FontWeight.w700
-                            : FontWeight.w900,
-                        color: darkMode
-                            ? colorScheme.primary
-                            : colorScheme.primaryContainer,
-                      ),
+                  ),
+                  Text(
+                    eta.hour >= 12 ? "pm" : "am",
+                    style: TextStyle(
+                      fontSize: 9,
+                      fontWeight: darkMode ? FontWeight.w300 : FontWeight.w300,
                     ),
-                  ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+          Row(
+            spacing: 4,
+            children: [
+              Text(
+                'Left:',
+                style: TextStyle(
+                  fontWeight: darkMode ? FontWeight.w700 : FontWeight.w900,
+                  fontSize: 13,
+                  color: darkMode
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.primaryContainer,
                 ),
-              ],
-            ),
-          )
-        : done
-        ? Transform.translate(
-            offset: Offset(running ? 4 : 0, 0),
-            child: Icon(
-              Icons.emoji_events,
-              color: colorScheme.primary.withAlpha((.6 * 255).round()),
-            ),
-          )
-        : Container(
-            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(5),
-              color: (running
-                  ? (darkMode ? colorScheme.primary : colorScheme.primary)
-                  : (darkMode
-                        ? colorScheme.primaryContainer
-                        : colorScheme.secondaryContainer)),
-            ),
-            child: Text(formatUntilGoal(goal, spent), style: textStyle),
-          );
+              ),
+              Text(
+                formatUntilGoal(goal, spent),
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: darkMode ? FontWeight.w700 : FontWeight.w900,
+                  color: darkMode
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.primaryContainer,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -142,13 +145,13 @@ class RoutineGoalDynamicLabel extends StatefulWidget {
     required this.spent,
     required this.goal,
     required this.lastStarted,
-    required this.running,
+    required this.state,
     required this.restorationId,
   });
 
   final Duration spent, goal;
   final DateTime lastStarted;
-  final bool running;
+  final RoutineState state;
   final String? restorationId;
 
   @override
@@ -197,7 +200,7 @@ class _RoutineGoalDynamicLabelState extends State<RoutineGoalDynamicLabel> {
     return RoutineGoalLabel(
       spent: _spent,
       goal: widget.goal,
-      running: widget.running,
+      state: widget.state,
       lastStarted: widget.lastStarted,
     );
   }

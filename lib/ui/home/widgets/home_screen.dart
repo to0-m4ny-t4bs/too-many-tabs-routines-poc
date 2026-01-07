@@ -140,7 +140,9 @@ class HomeScreenState extends State<HomeScreen> {
                         return Row(
                           children: [
                             HeaderEta(
-                              routines: widget.homeModel.routines,
+                              routines: widget.homeModel.routines
+                                  .map((rs) => rs.$1)
+                                  .toList(),
                               specialGoals:
                                   widget.settingsModel.settings.specialGoals,
                               specialSessionState:
@@ -188,7 +190,7 @@ class HomeScreenState extends State<HomeScreen> {
                 notesModel: widget.notesModel,
                 onTap: (index) {
                   setState(() {
-                    tappedRoutine = widget.homeModel.routines[index];
+                    tappedRoutine = widget.homeModel.routineAtIndex(index);
                   });
                 },
                 onPopup: () {
@@ -260,7 +262,8 @@ class HomeScreenState extends State<HomeScreen> {
                       },
                       closeCompleted: (id) {
                         setState(() {
-                          for (final routine in widget.homeModel.routines) {
+                          for (final rs in widget.homeModel.routines) {
+                            final routine = rs.$1;
                             if (routine.id == id) {
                               tappedRoutine = routine;
                             }
