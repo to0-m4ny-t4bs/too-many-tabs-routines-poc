@@ -272,25 +272,20 @@ class _GoalSelectState extends State<_GoalSelect> {
                 child: Text('Never mind'),
               ),
               ElevatedButton(
-                onPressed: minutesIndex == 0 && hoursIndex == 0
-                    ? null // set goal button is disabled unless duration > 0
-                    : () async {
-                        await widget.viewModel.updateSpecialGoalSetting.execute(
-                          SpecialGoalSettingUpdate(
-                            setting: widget.goalSetting,
-                            goal: Duration(
-                              minutes: minutesIndex * 30,
-                              hours: hoursIndex,
-                            ),
-                          ),
-                        );
-                        if (widget
-                            .viewModel
-                            .updateSpecialGoalSetting
-                            .completed) {
-                          widget.onGoalSet();
-                        }
-                      },
+                onPressed: () async {
+                  await widget.viewModel.updateSpecialGoalSetting.execute(
+                    SpecialGoalSettingUpdate(
+                      setting: widget.goalSetting,
+                      goal: Duration(
+                        minutes: minutesIndex * 30,
+                        hours: hoursIndex,
+                      ),
+                    ),
+                  );
+                  if (widget.viewModel.updateSpecialGoalSetting.completed) {
+                    widget.onGoalSet();
+                  }
+                },
                 style: ElevatedButton.styleFrom(
                   padding: EdgeInsets.all(20),
                   backgroundColor: darkMode
