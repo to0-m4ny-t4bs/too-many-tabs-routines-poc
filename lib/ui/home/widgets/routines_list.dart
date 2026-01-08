@@ -106,6 +106,9 @@ class _RoutinesListState extends State<RoutinesList> {
                         await widget.homeModel.startOrStopRoutine.execute(
                           routine.id,
                         );
+                        if (widget.homeModel.pinnedRoutine != null) {
+                          await widget.homeModel.load.execute();
+                        }
                       },
                       onMoveToBacklog: () async {
                         await widget.homeModel.archiveOrBinRoutine.execute((
