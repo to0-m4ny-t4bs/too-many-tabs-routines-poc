@@ -22,11 +22,8 @@ String formatUntilGoal(Duration goal, Duration spent, {bool? forceSuffix}) {
       ? ""
       : (hours == 0
             ? minutes.toString().replaceFirst('-', '+')
-            : minutes.toString().padLeft(2, "0"));
-  var suffix = hours == 0 ? "min" : "";
-  if (forceSuffix != null && minutes > 0 && forceSuffix) {
-    suffix = "min";
-  }
+            : '${minutes.toString().padLeft(2, "0")}m');
+  var suffix = hours == 0 ? "m" : "";
   return hours == 0 && minutes == 0
       ? 'done'
       : '$singleDigitHour$twoDigitsMinutes$suffix';
