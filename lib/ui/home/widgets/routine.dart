@@ -63,7 +63,7 @@ class Routine extends StatelessWidget {
             ),
             InkWell(
               splashColor: colorScheme.primaryContainer,
-              onLongPress: startStopSwitch,
+              onDoubleTap: startStopSwitch,
               onTap: onTap,
               child: Padding(
                 padding: EdgeInsets.only(
