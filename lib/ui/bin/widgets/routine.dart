@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
+import 'package:too_many_tabs/routing/routes.dart';
 import 'package:too_many_tabs/ui/core/ui/application_action.dart';
 import 'package:too_many_tabs/utils/format_duration.dart';
 import 'package:too_many_tabs/ui/core/colors.dart' as comp;
@@ -45,22 +47,27 @@ class Routine extends StatelessWidget {
       direction: DismissDirection.endToStart,
       child: Container(
         color: background,
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Flexible(
-                child: Text(
-                  routine.name.trim(),
-                  style: TextStyle(color: foreground),
+        child: InkWell(
+          onTap: () {
+            context.go('${Routes.notes}/${routine.id}');
+          },
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Flexible(
+                  child: Text(
+                    routine.name.trim(),
+                    style: TextStyle(color: foreground),
+                  ),
                 ),
-              ),
-              Text(
-                formatUntilGoal(routine.goal, routine.spent),
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w200),
-              ),
-            ],
+                Text(
+                  formatUntilGoal(routine.goal, routine.spent),
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w200),
+                ),
+              ],
+            ),
           ),
         ),
       ),

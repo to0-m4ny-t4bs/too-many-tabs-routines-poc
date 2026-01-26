@@ -66,37 +66,39 @@ class _NotesScreenState extends State<NotesScreen> {
                           children: [
                             Text(routine!.name),
                             GestureDetector(
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Icon(Symbols.trophy),
-                                  ListenableBuilder(
-                                    listenable: widget.homeViewmodel,
-                                    builder: (context, _) {
-                                      final routineId = routine.id;
-                                      RoutineSummary? routineUpdate;
-                                      for (final routineCandidate
-                                          in widget.homeViewmodel.routines) {
-                                        if (routineCandidate.$1.id ==
-                                            routineId) {
-                                          routineUpdate = routineCandidate.$1;
-                                          break;
-                                        }
-                                      }
-                                      return Text(
-                                        formatUntilGoal(
-                                          routineUpdate!.goal,
-                                          Duration.zero,
-                                        ),
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w300,
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ],
-                              ), // Row
+                              child: ListenableBuilder(
+                                listenable: widget.homeViewmodel,
+                                builder: (context, _) {
+                                  final routineId = routine.id;
+                                  RoutineSummary? routineUpdate;
+                                  for (final routineCandidate
+                                      in widget.homeViewmodel.routines) {
+                                    if (routineCandidate.$1.id == routineId) {
+                                      routineUpdate = routineCandidate.$1;
+                                      break;
+                                    }
+                                  }
+                                  return routineUpdate == null
+                                      ? SizedBox.shrink()
+                                      : Row(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Icon(Symbols.trophy),
+                                            Text(
+                                              formatUntilGoal(
+                                                routineUpdate.goal,
+                                                Duration.zero,
+                                              ),
+                                              style: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w300,
+                                              ),
+                                            ),
+                                          ],
+                                        ); // Row
+                                },
+                              ),
                               onTap: () {
                                 _goalPopup();
                               },
