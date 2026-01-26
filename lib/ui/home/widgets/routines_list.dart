@@ -5,9 +5,7 @@ import 'package:too_many_tabs/ui/home/view_models/destination_bucket.dart';
 import 'package:too_many_tabs/ui/home/view_models/home_viewmodel.dart';
 import 'package:too_many_tabs/ui/home/view_models/routine_state.dart';
 import 'package:too_many_tabs/ui/home/widgets/menu_item.dart';
-import 'package:too_many_tabs/ui/home/widgets/menu_popup.dart';
 import 'package:too_many_tabs/ui/home/widgets/routine.dart';
-import 'package:too_many_tabs/ui/home/widgets/routine_menu.dart';
 import 'package:too_many_tabs/ui/notes/view_models/notes_viewmodel.dart';
 
 class RoutinesList extends StatefulWidget {
@@ -16,13 +14,11 @@ class RoutinesList extends StatefulWidget {
     required this.homeModel,
     required this.notesModel,
     required this.onTap,
-    required this.onPopup,
   });
 
   final HomeViewmodel homeModel;
   final NotesViewmodel notesModel;
   final void Function(int) onTap;
-  final Function(bool) Function() onPopup;
 
   @override
   createState() => _RoutinesListState();
@@ -116,34 +112,6 @@ class _RoutinesListState extends State<RoutinesList> {
                           DestinationBucket.backlog,
                         ));
                       },
-                      menu: () {
-                        if (tappedRoutine != null &&
-                            tappedRoutine!.routineSummary.id == routine.id &&
-                            popup == null) {
-                          return RoutineMenu(
-                            homeViewmodel: widget.homeModel,
-                            close: (scrollTo) {
-                              widget.onPopup()(false);
-                              setState(() {
-                                popup = null;
-                                tappedRoutine = null;
-                              });
-                              itemScrollController.scrollTo(
-                                index: scrollTo,
-                                duration: Duration(milliseconds: 250),
-                              );
-                            },
-                            popup: (item) {
-                              widget.onPopup()(true);
-                              setState(() {
-                                popup = item;
-                              });
-                            },
-                            routine: tappedRoutine!.routineSummary,
-                          );
-                        }
-                        return SizedBox.shrink();
-                      },
                       onRedraw: (index) {
                         if (tappedRoutine != null &&
                             tappedRoutine!.index == index &&
@@ -158,29 +126,6 @@ class _RoutinesListState extends State<RoutinesList> {
                     );
                   },
                 ),
-                MenuPopup(
-                  routine: tappedRoutine?.routineSummary,
-                  homeModel: widget.homeModel,
-                  notesModel: widget.notesModel,
-                  menu: popup,
-                  close: () {
-                    widget.onPopup()(false);
-                    setState(() {
-                      popup = null;
-                      tappedRoutine = null;
-                    });
-                  },
-                ),
-                // Align(
-                //   alignment: Alignment.topCenter,
-                //   child: ElevatedButton.icon(
-                //     onPressed: () {
-                //       itemScrollController.jumpTo(index: runningIndex);
-                //     },
-                //     icon: Icon(Icons.refresh),
-                //     label: const Text('Running'),
-                //   ),
-                // ),
               ],
             ),
           );
@@ -199,14 +144,12 @@ class _ListItem extends StatefulWidget {
     required this.onStartOrStop,
     required this.onMoveToBacklog,
     required this.onRedraw,
-    required this.menu,
   });
   final int index;
   final RoutineSummary routine;
   final RoutineState state;
   final void Function(int) onTap;
   final void Function() onStartOrStop, onMoveToBacklog;
-  final Widget Function() menu;
   final Function(int) onRedraw;
 
   @override
@@ -239,7 +182,6 @@ class _ListItemState extends State<_ListItem> {
           startStopSwitch: widget.onStartOrStop,
           archive: widget.onMoveToBacklog,
         ),
-        widget.menu(),
       ],
     );
   }
