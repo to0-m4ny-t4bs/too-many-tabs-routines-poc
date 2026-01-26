@@ -64,7 +64,14 @@ GoRouter router() => GoRouter(
           repo: context.read(),
           routineId: int.parse(routineId),
         );
-        return NotesScreen(viewModel: viewModel);
+        final homeViewmodel = HomeViewmodel(
+          routinesRepository: context.read(),
+          settingsRepository: context.read(),
+        );
+        return NotesScreen(
+          notesViewmodel: viewModel,
+          homeViewmodel: homeViewmodel,
+        );
       },
     ),
   ],

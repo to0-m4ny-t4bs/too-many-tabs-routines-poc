@@ -56,7 +56,7 @@ class GoalPopupState extends State<GoalPopup> {
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(borderRadius: BorderRadius.circular(30), child: setter);
+    return setter;
   }
 }
 
@@ -136,33 +136,7 @@ class SetGoalState extends State<SetGoal> {
         child: Column(
           spacing: 17,
           crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              spacing: Dimens.of(context).rowSpacing,
-              children: [
-                Text(
-                  'Set',
-                  style: TextStyle(
-                    color: darkMode
-                        ? colorScheme.onPrimary
-                        : colorScheme.onSurface,
-                    fontWeight: FontWeight.w300,
-                  ),
-                ),
-                Text(
-                  'daily goal',
-                  style: TextStyle(
-                    color: darkMode
-                        ? colorScheme.onPrimary
-                        : colorScheme.onSurface,
-                    fontWeight: FontWeight.w300,
-                  ),
-                ),
-              ],
-            ),
-            select,
-          ],
+          children: [select],
         ),
       ),
     );

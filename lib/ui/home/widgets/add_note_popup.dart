@@ -34,6 +34,8 @@ class AddNotePopupState extends State<AddNotePopup> {
   final noteTextController = TextEditingController();
 
   void commitNote() {
+    final trimmed = noteTextController.text.trim();
+    if (trimmed.isEmpty) return;
     widget.viewModel.addNote.execute(
       NoteSummary(
         note: noteTextController.text,
@@ -51,30 +53,15 @@ class AddNotePopupState extends State<AddNotePopup> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    final darkMode = Theme.of(context).brightness == Brightness.dark;
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: darkMode ? colors.surface : colors.surfaceContainer,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('Add Note', style: TextStyle(color: colors.primary)),
-            const SizedBox(height: 20),
-            TextField(
-              controller: noteTextController,
-              decoration: InputDecoration(
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-              ),
-            ),
-          ],
-        ),
+    final theme = Theme.of(context);
+    return TextField(
+      controller: noteTextController,
+      maxLines: null,
+      decoration: InputDecoration(
+        hintText: "Add note... 🖊️",
+        filled: true,
+        fillColor: theme.colorScheme.surfaceContainer,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
       ),
     );
   }
