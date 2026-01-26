@@ -15,12 +15,9 @@ import 'package:too_many_tabs/ui/core/ui/header_action.dart';
 import 'package:too_many_tabs/ui/core/ui/label.dart';
 import 'package:too_many_tabs/ui/core/ui/application_action.dart';
 import 'package:too_many_tabs/ui/home/view_models/home_viewmodel.dart';
-import 'package:too_many_tabs/ui/home/widgets/action_button.dart';
-import 'package:too_many_tabs/ui/home/widgets/expandable_fab.dart';
 import 'package:too_many_tabs/ui/home/widgets/header_eta.dart';
 import 'package:too_many_tabs/ui/home/widgets/new_routine.dart';
 import 'package:too_many_tabs/ui/home/widgets/routines_list.dart';
-import 'package:too_many_tabs/ui/home/widgets/special_goal_action.dart';
 import 'package:too_many_tabs/ui/notes/view_models/notes_viewmodel.dart';
 import 'package:too_many_tabs/ui/settings/view_models/settings_viewmodel.dart';
 
@@ -254,10 +251,21 @@ class HomeScreenState extends State<HomeScreen> {
                 : Container(),
             isSomePopupShown || showNewRoutinePopup
                 ? SizedBox.shrink()
-                : ListenableBuilder(
-                    listenable: widget.homeModel,
-                    builder: (context, _) =>
-                        _buildExpandableFab(widget.homeModel.newDay),
+                : Align(
+                    alignment: Alignment.bottomRight,
+                    child: FloatingAction(
+                      onPressed: () {
+                        setState(() {
+                          showNewRoutinePopup = true;
+                        });
+                      },
+                      icon: Icons.add,
+                      colorComposition: colorCompositionFromAction(
+                        context,
+                        ApplicationAction.addRoutine,
+                      ),
+                      verticalOffset: actionVerticalOffset,
+                    ),
                   ),
             isSomePopupShown || showNewRoutinePopup
                 ? Container()
@@ -380,63 +388,5 @@ class HomeScreenState extends State<HomeScreen> {
         .where((item) => item.$2 == session)
         .toList()[0]
         .$1;
-  }
-
-  Widget _buildExpandableFab(bool newDay) {
-    debugPrint('_buildExpandableFab: $newDay');
-    return ExpandableFab(
-      initialOpen: false,
-      distance: newDay ? 80 : 90,
-      spreadAngle: newDay ? 90 : 135,
-      children: [
-        ...[
-              ...newDay
-                  ? []
-                  : [
-                      SpecialGoalAction(
-                        goal: SpecialGoal.slowDown,
-                        symbol: Symbols.bedtime,
-                      ),
-                      SpecialGoalAction(
-                        goal: SpecialGoal.stoke,
-                        symbol: Symbols.fork_spoon,
-                      ),
-                      SpecialGoalAction(
-                        goal: SpecialGoal.sitBack,
-                        symbol: Symbols.beach_access,
-                      ),
-                    ],
-              newDay
-                  ? SpecialGoalAction(
-                      goal: SpecialGoal.startSlow,
-                      symbol: Symbols.wb_twilight,
-                    )
-                  : null,
-            ]
-            .map(
-              (action) => action != null
-                  ? ActionButton(
-                      onPressed: () {
-                        widget.homeModel.toggleSpecialSession.execute(
-                          action.goal,
-                        );
-                      },
-                      icon: action.symbol,
-                      highlight:
-                          widget.homeModel.runningSpecialSession == action.goal,
-                    )
-                  : null,
-            )
-            .where((widget) => widget != null)
-            .cast(),
-        ActionButton(
-          onPressed: () => setState(() {
-            showNewRoutinePopup = true;
-          }),
-          icon: Symbols.add,
-          secondary: newDay,
-        ),
-      ],
-    );
   }
 }
