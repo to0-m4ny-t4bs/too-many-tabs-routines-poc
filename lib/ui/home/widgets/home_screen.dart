@@ -15,6 +15,7 @@ import 'package:too_many_tabs/ui/core/ui/header_action.dart';
 import 'package:too_many_tabs/ui/core/ui/label.dart';
 import 'package:too_many_tabs/ui/core/ui/application_action.dart';
 import 'package:too_many_tabs/ui/home/view_models/home_viewmodel.dart';
+import 'package:too_many_tabs/ui/home/view_models/routine_state.dart';
 import 'package:too_many_tabs/ui/home/widgets/header_eta.dart';
 import 'package:too_many_tabs/ui/home/widgets/new_routine.dart';
 import 'package:too_many_tabs/ui/home/widgets/routines_list.dart';
@@ -283,10 +284,23 @@ class HomeScreenState extends State<HomeScreen> {
     required SpecialGoals settings,
     required SpecialSessionDuration? state,
   }) {
+    var plannedCount = 0;
+    var completedCount = 0;
+    for (final routine in widget.homeModel.routines) {
+      switch (routine.$2) {
+        case RoutineState.overRun:
+        case RoutineState.goalReached:
+          completedCount++;
+        default:
+      }
+      if (routine.$1.goal > Duration.zero) {
+        plannedCount++;
+      }
+    }
     if (session == null) {
       return [
         Text(
-          '${widget.homeModel.routines.length}',
+          '$completedCount / $plannedCount',
           style: TextStyle(
             color: labelColor(context, Label.homeScreenNumberOfPlannedRoutines),
             fontWeight: FontWeight.w400,
@@ -294,11 +308,11 @@ class HomeScreenState extends State<HomeScreen> {
           ),
         ),
         Text(
-          'routine${widget.homeModel.routines.length <= 1 ? '' : 's'} planned today',
+          'routine${plannedCount <= 1 ? '' : 's'} completed',
           style: TextStyle(
             color: labelColor(context, Label.homeScreenRoutinesPlannedToday),
             fontWeight: FontWeight.w300,
-            fontSize: 16,
+            fontSize: 18,
           ),
         ),
       ];
