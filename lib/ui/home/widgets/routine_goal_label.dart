@@ -76,24 +76,50 @@ class RoutineGoalLabel extends StatelessWidget {
     }
   }
 
+  TextStyle _primaryTextStyle({
+    required ThemeData theme,
+    required bool darkMode,
+    required double fontSize,
+  }) {
+    return TextStyle(
+      fontWeight: darkMode ? FontWeight.w700 : FontWeight.w900,
+      fontSize: fontSize,
+      color: darkMode
+          ? theme.colorScheme.primary
+          : theme.colorScheme.primaryContainer,
+    );
+  }
+
   Widget _buildIsRunningLabel(BuildContext context, DateTime eta) {
     final theme = Theme.of(context);
     final darkMode = theme.brightness == Brightness.dark;
+    final secondaryTextStyle = TextStyle(
+      fontSize: 12,
+      fontWeight: darkMode ? FontWeight.w300 : FontWeight.w400,
+    );
     return Container(
       padding: EdgeInsets.symmetric(vertical: 5),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           Row(
+            spacing: 4,
+            children: [
+              Text('Left:', style: secondaryTextStyle),
+              Text(formatUntilGoal(goal, spent), style: secondaryTextStyle),
+            ],
+          ), // "Left" Row
+          Row(
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
             spacing: 3,
             children: [
               Text(
-                'ETA:',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: darkMode ? FontWeight.w200 : FontWeight.w400,
+                'ETA',
+                style: _primaryTextStyle(
+                  theme: theme,
+                  darkMode: darkMode,
+                  fontSize: 13,
                 ),
               ),
               Row(
@@ -103,47 +129,24 @@ class RoutineGoalLabel extends StatelessWidget {
                 children: [
                   Text(
                     _format(eta),
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: darkMode ? FontWeight.w300 : FontWeight.w400,
+                    style: _primaryTextStyle(
+                      theme: theme,
+                      darkMode: darkMode,
+                      fontSize: 16,
                     ),
                   ),
                   Text(
                     eta.hour >= 12 ? "pm" : "am",
-                    style: TextStyle(
-                      fontSize: 9,
-                      fontWeight: darkMode ? FontWeight.w300 : FontWeight.w300,
+                    style: _primaryTextStyle(
+                      theme: theme,
+                      darkMode: darkMode,
+                      fontSize: 12,
                     ),
                   ),
                 ],
               ),
             ],
-          ),
-          Row(
-            spacing: 4,
-            children: [
-              Text(
-                'Left:',
-                style: TextStyle(
-                  fontWeight: darkMode ? FontWeight.w700 : FontWeight.w900,
-                  fontSize: 13,
-                  color: darkMode
-                      ? theme.colorScheme.primary
-                      : theme.colorScheme.primaryContainer,
-                ),
-              ),
-              Text(
-                formatUntilGoal(goal, spent),
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: darkMode ? FontWeight.w700 : FontWeight.w900,
-                  color: darkMode
-                      ? theme.colorScheme.primary
-                      : theme.colorScheme.primaryContainer,
-                ),
-              ),
-            ],
-          ),
+          ), // "ETA" Row
         ],
       ),
     );
