@@ -174,7 +174,7 @@ class _ListItemState extends State<_ListItem> {
           key: ValueKey(widget.routine.id),
           routine: widget.routine,
           state: widget.state,
-          startStopSwitch: widget.onStartOrStop,
+          toggle: widget.onStartOrStop,
           archive: widget.onMoveToBacklog,
         ),
       ],

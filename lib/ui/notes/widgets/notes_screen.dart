@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:too_many_tabs/routing/routes.dart';
@@ -52,61 +53,102 @@ class _NotesScreenState extends State<NotesScreen> {
         builder: (context, child) {
           final count = widget.notesViewmodel.notes.length;
           final routine = widget.notesViewmodel.routine;
-          return Stack(
-            children: [
-              Scaffold(
-                appBar: AppBar(
-                  backgroundColor: darkMode
-                      ? colorScheme.primaryContainer
-                      : colorScheme.primaryFixed,
-                  title: widget.notesViewmodel.routine == null
-                      ? SizedBox.shrink()
-                      : Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(routine!.name),
-                            GestureDetector(
-                              child: ListenableBuilder(
-                                listenable: widget.homeViewmodel,
-                                builder: (context, _) {
-                                  final routineId = routine.id;
-                                  RoutineSummary? routineUpdate;
-                                  for (final routineCandidate
-                                      in widget.homeViewmodel.routines) {
-                                    if (routineCandidate.$1.id == routineId) {
-                                      routineUpdate = routineCandidate.$1;
-                                      break;
-                                    }
-                                  }
-                                  return routineUpdate == null
-                                      ? SizedBox.shrink()
-                                      : Row(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Icon(Symbols.trophy),
-                                            Text(
-                                              formatUntilGoal(
-                                                routineUpdate.goal,
-                                                Duration.zero,
-                                              ),
-                                              style: TextStyle(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.w300,
-                                              ),
-                                            ),
-                                          ],
-                                        ); // Row
-                                },
-                              ),
-                              onTap: () {
-                                _goalPopup();
-                              },
-                            ), // GestureDetector
-                          ],
-                        ), // Row
-                ),
-                body: ShaderMask(
+          return Scaffold(
+            appBar: AppBar(
+              backgroundColor: darkMode
+                  ? colorScheme.primaryContainer
+                  : colorScheme.primaryFixed,
+              title: widget.notesViewmodel.routine == null
+                  ? SizedBox.shrink()
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(routine!.name),
+                        GestureDetector(
+                          onTap: () => widget.homeViewmodel.startOrStopRoutine
+                              .execute(routine.id),
+                          child: ListenableBuilder(
+                            listenable: widget.homeViewmodel,
+                            builder: (context, _) {
+                              final routineUpdate = _getRoutine(routine.id);
+                              if (routineUpdate == null) {
+                                return SizedBox.shrink();
+                              }
+                              if (!routineUpdate.running) {
+                                return Column(
+                                  spacing: 2,
+                                  children: [
+                                    Icon(Symbols.play_circle),
+                                    Text(
+                                      'Start',
+                                      style: TextStyle(fontSize: 14),
+                                    ),
+                                  ],
+                                );
+                              }
+                              final now = DateTime.now();
+                              final spent = routineUpdate.spentAt(now);
+                              final to = now.add(routineUpdate.goal - spent);
+                              return Column(
+                                spacing: 2,
+                                children: [
+                                  Icon(Symbols.stop_circle),
+                                  spent < routineUpdate.goal
+                                      ? Text(
+                                          'ETA ${DateFormat.jm().format(to)}',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w300,
+                                          ),
+                                        )
+                                      : Text(
+                                          'overtime',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w400,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                ],
+                              );
+                            },
+                          ),
+                        ), // GestureDetector: toggle routine start/stop
+                        GestureDetector(
+                          child: ListenableBuilder(
+                            listenable: widget.homeViewmodel,
+                            builder: (context, _) {
+                              final routineUpdate = _getRoutine(routine.id);
+                              return routineUpdate == null
+                                  ? SizedBox.shrink()
+                                  : Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Icon(Symbols.trophy),
+                                        Text(
+                                          formatUntilGoal(
+                                            routineUpdate.goal,
+                                            Duration.zero,
+                                          ),
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w300,
+                                          ),
+                                        ),
+                                      ],
+                                    ); // Row
+                            },
+                          ),
+                          onTap: () {
+                            _goalPopup();
+                          },
+                        ), // GestureDetector: goal setting
+                      ],
+                    ), // Row
+            ),
+            body: Stack(
+              children: [
+                ShaderMask(
                   shaderCallback: (bounds) {
                     return LinearGradient(
                       begin: Alignment.topCenter,
@@ -132,13 +174,25 @@ class _NotesScreenState extends State<NotesScreen> {
                     },
                   ),
                 ),
-              ),
-              ..._actionButtons(context),
-            ],
+                ..._actionButtons(context),
+              ],
+            ),
           );
         },
       ),
     );
+  }
+
+  RoutineSummary? _getRoutine(int id) {
+    final routineId = id;
+    RoutineSummary? routineUpdate;
+    for (final routineCandidate in widget.homeViewmodel.routines) {
+      if (routineCandidate.$1.id == routineId) {
+        routineUpdate = routineCandidate.$1;
+        break;
+      }
+    }
+    return routineUpdate;
   }
 
   List<Widget> _actionButtons(BuildContext context) {

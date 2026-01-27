@@ -12,13 +12,13 @@ class Routine extends StatelessWidget {
     super.key,
     required this.routine,
     required this.state,
-    required this.startStopSwitch,
     required this.archive,
+    required this.toggle,
   });
 
   final RoutineSummary routine;
   final RoutineState state;
-  final Function() startStopSwitch, archive;
+  final void Function() archive, toggle;
 
   @override
   Widget build(BuildContext context) {
@@ -64,7 +64,7 @@ class Routine extends StatelessWidget {
             ),
             InkWell(
               splashColor: colorScheme.primaryContainer,
-              onDoubleTap: startStopSwitch,
+              onLongPress: toggle,
               onTap: () {
                 context.go('${Routes.notes}/${routine.id}');
               },

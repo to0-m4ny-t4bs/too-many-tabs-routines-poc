@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:too_many_tabs/ui/core/themes/dimens.dart';
 import 'package:too_many_tabs/ui/home/view_models/goal_update.dart';
 import 'package:too_many_tabs/ui/home/view_models/home_viewmodel.dart';
 
